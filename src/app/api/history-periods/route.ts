@@ -1,50 +1,47 @@
-import prisma from "@/lib/db"
-import { currentUser } from "@clerk/nextjs/server"
-import { redirect } from "next/navigation"
+import prisma from '@/lib/db'
+import { currentUser } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 
 // @typescript-eslint/no-unused-vars
 export async function GET(request: Request) {
-    const user = await currentUser()
+  const user = await currentUser()
 
-    if (!user) {
-        redirect("/sign-in")
-    }
+  if (!user) {
+    redirect('/sign-in')
+  }
 
-    if (request.method !== "GET") return
+  if (request.method !== 'GET') return
 
-    const periods = await getHistoryPeriods(user.id)
+  const periods = await getHistoryPeriods(user.id)
 
-    return Response.json(periods)
+  return Response.json(periods)
 }
 
-export type GetHistoryPeriodsResponseType =
-    Awaited<
-        ReturnType<typeof getHistoryPeriods>
-    >
+export type GetHistoryPeriodsResponseType = Awaited<
+  ReturnType<typeof getHistoryPeriods>
+>
 
 async function getHistoryPeriods(userId: string) {
-    const result = await prisma.monthHistory.findMany({
-        where: {
-            userId,
-        },
-        select: {
-            year: true,
-        },
-        distinct: ["year"],
-        orderBy: [
-            {
-                year: "asc",
-            },
-        ],
-    })
+  const result = await prisma.monthHistory.findMany({
+    where: {
+      userId,
+    },
+    select: {
+      year: true,
+    },
+    distinct: ['year'],
+    orderBy: [
+      {
+        year: 'asc',
+      },
+    ],
+  })
 
-    const years = result.map(
-        (el) => el.year
-    )
+  const years = result.map((el) => el.year)
 
-    if (years.length === 0) {
-        return [new Date().getFullYear()]
-    }
+  if (years.length === 0) {
+    return [new Date().getFullYear()]
+  }
 
-    return years
+  return years
 }

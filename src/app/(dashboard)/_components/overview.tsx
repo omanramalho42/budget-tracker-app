@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import React, { useState } from 'react'
 
@@ -16,57 +16,56 @@ import StatsCards from './stats-cards'
 import CategoriesStats from './categories-stats'
 
 interface OverviewProps {
-    userSettings: UserSettings
+  userSettings: UserSettings
 }
 
 function Overview({ userSettings }: OverviewProps) {
-    const [dateRange, setDateRange] =
-        useState<{ from: Date; to: Date }>({
-            from: startOfMonth(new Date()),
-            to: new Date(),
-        })
-    
-    return (
-        <>
-            <div className="container flex flex-wrap items-end justify-between gap-2 py-6">
-                <h2 className='text-3xl font-bold'>Visão geral</h2>
-                <div className="flex items-center gap-3">
-                    <DateRangePicker 
-                        initialDateFrom={dateRange.from}
-                        initialDateTo={dateRange.to}
-                        showCompare={false}
-                        onUpdate={(values) => {
-                            const { from, to } = values.range
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+    from: startOfMonth(new Date()),
+    to: new Date(),
+  })
 
-                            if (!from || !to) return
+  return (
+    <>
+      <div className="container flex flex-wrap items-end justify-between gap-2 py-6">
+        <h2 className="text-3xl font-bold">Visão geral</h2>
+        <div className="flex items-center gap-3">
+          <DateRangePicker
+            initialDateFrom={dateRange.from}
+            initialDateTo={dateRange.to}
+            showCompare={false}
+            onUpdate={(values) => {
+              const { from, to } = values.range
 
-                            if (differenceInDays(to, from) > MAX_DATE_RANGE_DAYS) {
-                                toast.error(
-                                    `A seleção entre datas é muito grande. O máximo permitido é ${MAX_DATE_RANGE_DAYS} dias`
-                                )
+              if (!from || !to) return
 
-                                return
-                            }
-                            setDateRange({ from, to })
-                        }}
-                    />
-                </div>
-            </div>
-            <div className="container flex w-full flex-col gap-2">
-                <StatsCards
-                    userSettings={userSettings}
-                    from={dateRange.from}
-                    to={dateRange.to}
-                />
+              if (differenceInDays(to, from) > MAX_DATE_RANGE_DAYS) {
+                toast.error(
+                  `A seleção entre datas é muito grande. O máximo permitido é ${MAX_DATE_RANGE_DAYS} dias`,
+                )
 
-                <CategoriesStats
-                    userSettings={userSettings}
-                    from={dateRange.from}
-                    to={dateRange.to}
-                />
-            </div>
-        </>
-    )
+                return
+              }
+              setDateRange({ from, to })
+            }}
+          />
+        </div>
+      </div>
+      <div className="container flex w-full flex-col gap-2">
+        <StatsCards
+          userSettings={userSettings}
+          from={dateRange.from}
+          to={dateRange.to}
+        />
+
+        <CategoriesStats
+          userSettings={userSettings}
+          from={dateRange.from}
+          to={dateRange.to}
+        />
+      </div>
+    </>
+  )
 }
 
 export default Overview

@@ -5,14 +5,13 @@ import { withOptimize } from '@prisma/extension-optimize'
 
 const prismaClientSingleton = () => {
   return new PrismaClient()
-    .$extends(
-        withOptimize({ apiKey: process.env.OPTIMIZE_API_KEY! })
-    ).$extends(withAccelerate())
+    .$extends(withOptimize({ apiKey: process.env.OPTIMIZE_API_KEY! }))
+    .$extends(withAccelerate())
 }
 
 declare const globalThis: {
-  prismaGlobal: ReturnType<typeof prismaClientSingleton>;
-} & typeof global;
+  prismaGlobal: ReturnType<typeof prismaClientSingleton>
+} & typeof global
 
 const prisma = globalThis.prismaGlobal ?? prismaClientSingleton()
 

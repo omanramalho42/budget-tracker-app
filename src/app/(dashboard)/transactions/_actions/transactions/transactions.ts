@@ -1,101 +1,103 @@
-"use server"
+'use server'
 
-import { redirect } from "next/navigation"
+import { redirect } from 'next/navigation'
 
-import { currentUser } from "@clerk/nextjs/server"
+import { currentUser } from '@clerk/nextjs/server'
 
-import prisma from "@/lib/db"
+import prisma from '@/lib/db'
 
-import { CreateTransactionSchemaType, CreateTransactionSchema } from "@/schema/transaction"
+import {
+  CreateTransactionSchemaType,
+  CreateTransactionSchema,
+} from '@/schema/transaction'
 
 export async function CreateTransaction(form: CreateTransactionSchemaType) {
-    const parsedBody = CreateTransactionSchema.safeParse(form)
-    
-    // throw new Error("teste")
+  const parsedBody = CreateTransactionSchema.safeParse(form)
 
-    if (!parsedBody.success) throw new Error(parsedBody.error.message)
+  // throw new Error("teste")
 
-    const user = await currentUser();
-    if (!user) {
-        redirect("/sign-in")
-    }
+  if (!parsedBody.success) throw new Error(parsedBody.error.message)
 
-    //FIND EXISTS FOLLOWING CATEGORY NAME
-    const { amount, category, date, type, description } = parsedBody.data
+  const user = await currentUser()
+  if (!user) {
+    redirect('/sign-in')
+  }
 
-    const categoryRow = await prisma.category.findFirst({
-        where: {
-            userId: user.id,
-            name: category
-        }
-    })
+  // FIND EXISTS FOLLOWING CATEGORY NAME
+  const { amount, category, date, type, description } = parsedBody.data
 
-    if (!categoryRow) throw new Error("Category not found")
+  const categoryRow = await prisma.category.findFirst({
+    where: {
+      userId: user.id,
+      name: category,
+    },
+  })
 
-    await prisma.$transaction([
-        prisma.transaction.create({
-            data: {
-                userId: user.id,
-                amount,
-                date,
-                description: description || "",
-                type,
-                category,
-                categoryIcon: categoryRow.icon,
-            },
-        }),
+  if (!categoryRow) throw new Error('Category not found')
 
-        prisma.monthHistory.upsert({
-            where: {
-                day_month_year_userId: {
-                    userId: user.id,
-                    day: date.getUTCDate(),
-                    month: date.getUTCMonth(),
-                    year: date.getUTCFullYear(),
-                },
-            },
-            create: {
-                userId: user.id,
-                day: date.getUTCDate(),
-                month: date.getUTCMonth(),
-                year: date.getUTCFullYear(),
-                expanse: type === "expanse" ? amount : 0,
-                income: type === "income" ? amount : 0,
-            },
-            update: {
-                expanse: {
-                    increment: type === "expanse" ? amount : 0,
-                },
-                income: {
-                    increment: type === "income" ? amount : 0,
-                }
-            }
-        }),
+  await prisma.$transaction([
+    prisma.transaction.create({
+      data: {
+        userId: user.id,
+        amount,
+        date,
+        description: description || '',
+        type,
+        category,
+        categoryIcon: categoryRow.icon,
+      },
+    }),
 
-        prisma.yearHistory.upsert({
-            where: {
-                month_year_userId: {
-                    userId: user.id,
-                    month: date.getUTCMonth(),
-                    year: date.getUTCFullYear(),
-                },
-            },
-            create: {
-                userId: user.id,
-                month: date.getUTCMonth(),
-                year: date.getUTCFullYear(),
-                expanse: type === "expanse" ? amount : 0,
-                income: type === "income" ? amount : 0,
-            },
-            update: {
-                expanse: {
-                    increment: type === "expanse" ? amount : 0,
-                },
-                income: {
-                    increment: type === "income" ? amount : 0,
-                }
-            }
-        }),
-    ])
+    prisma.monthHistory.upsert({
+      where: {
+        day_month_year_userId: {
+          userId: user.id,
+          day: date.getUTCDate(),
+          month: date.getUTCMonth(),
+          year: date.getUTCFullYear(),
+        },
+      },
+      create: {
+        userId: user.id,
+        day: date.getUTCDate(),
+        month: date.getUTCMonth(),
+        year: date.getUTCFullYear(),
+        expanse: type === 'expanse' ? amount : 0,
+        income: type === 'income' ? amount : 0,
+      },
+      update: {
+        expanse: {
+          increment: type === 'expanse' ? amount : 0,
+        },
+        income: {
+          increment: type === 'income' ? amount : 0,
+        },
+      },
+    }),
 
+    prisma.yearHistory.upsert({
+      where: {
+        month_year_userId: {
+          userId: user.id,
+          month: date.getUTCMonth(),
+          year: date.getUTCFullYear(),
+        },
+      },
+      create: {
+        userId: user.id,
+        month: date.getUTCMonth(),
+        year: date.getUTCFullYear(),
+        expanse: type === 'expanse' ? amount : 0,
+        income: type === 'income' ? amount : 0,
+      },
+      update: {
+        expanse: {
+          increment: type === 'expanse' ? amount : 0,
+        },
+        income: {
+          increment: type === 'income' ? amount : 0,
+        },
+      },
+    }),
+  ])
 }

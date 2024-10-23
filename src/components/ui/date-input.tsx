@@ -17,7 +17,7 @@ const DateInput: React.FC<DateInputProps> = ({ value, onChange }) => {
     return {
       day: d.getDate(),
       month: d.getMonth() + 1, // JavaScript months are 0-indexed
-      year: d.getFullYear()
+      year: d.getFullYear(),
     }
   })
 
@@ -30,7 +30,7 @@ const DateInput: React.FC<DateInputProps> = ({ value, onChange }) => {
     setDate({
       day: d.getDate(),
       month: d.getMonth() + 1,
-      year: d.getFullYear()
+      year: d.getFullYear(),
     })
   }, [value])
 
@@ -46,15 +46,18 @@ const DateInput: React.FC<DateInputProps> = ({ value, onChange }) => {
     // Validate the day of the month
     const newDate = { ...date, [field]: value }
     const d = new Date(newDate.year, newDate.month - 1, newDate.day)
-    return d.getFullYear() === newDate.year &&
-           d.getMonth() + 1 === newDate.month &&
-           d.getDate() === newDate.day
+    return (
+      d.getFullYear() === newDate.year &&
+      d.getMonth() + 1 === newDate.month &&
+      d.getDate() === newDate.day
+    )
   }
 
   const handleInputChange =
     (field: keyof DateParts) => (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value ? Number(e.target.value) : ''
-      const isValid = typeof newValue === 'number' && validateDate(field, newValue)
+      const isValid =
+        typeof newValue === 'number' && validateDate(field, newValue)
 
       // If the new value is valid, update the date
       const newDate = { ...date, [field]: newValue }
@@ -68,24 +71,24 @@ const DateInput: React.FC<DateInputProps> = ({ value, onChange }) => {
 
   const initialDate = useRef<DateParts>(date)
 
-  const handleBlur = (field: keyof DateParts) => (
-    e: React.FocusEvent<HTMLInputElement>
-  ): void => {
-    if (!e.target.value) {
-      setDate(initialDate.current)
-      return
-    }
+  const handleBlur =
+    (field: keyof DateParts) =>
+    (e: React.FocusEvent<HTMLInputElement>): void => {
+      if (!e.target.value) {
+        setDate(initialDate.current)
+        return
+      }
 
-    const newValue = Number(e.target.value)
-    const isValid = validateDate(field, newValue)
+      const newValue = Number(e.target.value)
+      const isValid = validateDate(field, newValue)
 
-    if (!isValid) {
-      setDate(initialDate.current)
-    } else {
-      // If the new value is valid, update the initial value
-      initialDate.current = { ...date, [field]: newValue }
+      if (!isValid) {
+        setDate(initialDate.current)
+      } else {
+        // If the new value is valid, update the initial value
+        initialDate.current = { ...date, [field]: newValue }
+      }
     }
-  }
 
   const handleKeyDown =
     (field: keyof DateParts) => (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -105,7 +108,7 @@ const DateInput: React.FC<DateInputProps> = ({ value, onChange }) => {
           'Delete',
           'Tab',
           'Backspace',
-          'Enter'
+          'Enter',
         ].includes(e.key)
       ) {
         e.preventDefault()
@@ -196,7 +199,7 @@ const DateInput: React.FC<DateInputProps> = ({ value, onChange }) => {
     }
 
   return (
-    <div className="flex border rounded-lg items-center text-sm px-1">
+    <div className="flex items-center rounded-lg border px-1 text-sm">
       <input
         type="text"
         ref={monthRef}
@@ -211,10 +214,10 @@ const DateInput: React.FC<DateInputProps> = ({ value, onChange }) => {
           }
         }}
         onBlur={handleBlur('month')}
-        className="p-0 outline-none w-6 border-none text-center bg-transparent"
+        className="w-6 border-none bg-transparent p-0 text-center outline-none"
         placeholder="M"
       />
-      <span className="opacity-20 -mx-px">/</span>
+      <span className="-mx-px opacity-20">/</span>
       <input
         type="text"
         ref={dayRef}
@@ -229,10 +232,10 @@ const DateInput: React.FC<DateInputProps> = ({ value, onChange }) => {
           }
         }}
         onBlur={handleBlur('day')}
-        className="p-0 outline-none w-7 border-none text-center bg-transparent"
+        className="w-7 border-none bg-transparent p-0 text-center outline-none"
         placeholder="D"
       />
-      <span className="opacity-20 -mx-px">/</span>
+      <span className="-mx-px opacity-20">/</span>
       <input
         type="text"
         ref={yearRef}
@@ -247,7 +250,7 @@ const DateInput: React.FC<DateInputProps> = ({ value, onChange }) => {
           }
         }}
         onBlur={handleBlur('year')}
-        className="p-0 outline-none w-12 border-none text-center bg-transparent"
+        className="w-12 border-none bg-transparent p-0 text-center outline-none"
         placeholder="YYYY"
       />
     </div>

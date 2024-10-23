@@ -1,40 +1,40 @@
-import { z } from "zod"
+import { z } from 'zod'
 
-import { redirect } from "next/navigation"
+import { redirect } from 'next/navigation'
 
-import { currentUser } from "@clerk/nextjs/server"
+import { currentUser } from '@clerk/nextjs/server'
 
-import prisma from "@/lib/db";
+import prisma from '@/lib/db'
 
 export async function GET(request: Request) {
-    const user = await currentUser();
-    
-    if (!user) {
-        redirect("/sign-in")
-    }
+  const user = await currentUser()
 
-    const { searchParams } = new URL(request.url)
-    const paramType = searchParams.get("type")
+  if (!user) {
+    redirect('/sign-in')
+  }
 
-    const validator = z.enum(["expanse", "income"]).nullable();
-    const queryParams = validator.safeParse(paramType)
+  const { searchParams } = new URL(request.url)
+  const paramType = searchParams.get('type')
 
-    if (!queryParams.success) {
-        return Response.json(queryParams.error, {
-            status: 400
-        })
-    }
+  const validator = z.enum(['expanse', 'income']).nullable()
+  const queryParams = validator.safeParse(paramType)
 
-    const type = queryParams.data
-    const categories = await prisma.category.findMany({
-        where: {
-            userId: user.id,
-            ...(type && { type }) //inclui o type no filtro caso se ele estiver definido
-        },
-        orderBy: {
-            name: "asc"
-        }
+  if (!queryParams.success) {
+    return Response.json(queryParams.error, {
+      status: 400,
     })
+  }
 
-    return Response.json(categories)
+  const type = queryParams.data
+  const categories = await prisma.category.findMany({
+    where: {
+      userId: user.id,
+      ...(type && { type }), // inclui o type no filtro caso se ele estiver definido
+    },
+    orderBy: {
+      name: 'asc',
+    },
+  })
+
+  return Response.json(categories)
 }
