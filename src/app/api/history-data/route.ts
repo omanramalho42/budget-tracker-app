@@ -44,7 +44,6 @@ export type GetHistoryDataResponseType =
         ReturnType<typeof getHistoryData>
     >
 
-
 async function getHistoryData(userId: string, timeframe: Timeframe, period: Period) {
     switch(timeframe) {
         case "year":

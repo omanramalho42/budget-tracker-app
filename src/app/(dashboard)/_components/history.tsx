@@ -234,8 +234,7 @@ function TooltipRow({
 }: {
     formatter: Intl.NumberFormat
     label: string
-    // @typescript-eslint/no-explicit-any
-    value: any
+    value: number
     bgColor: string
     textColor: string
 } ) {
