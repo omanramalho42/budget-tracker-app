@@ -16,8 +16,6 @@ import {
 export async function CreateCategory(form: CreateCategoriesSchemaType) {
   const parsedBody = CreateCategoriesSchema.safeParse(form)
 
-  // throw new Error("teste")
-
   if (!parsedBody.success) throw parsedBody.error
 
   const user = await currentUser()
@@ -25,7 +23,6 @@ export async function CreateCategory(form: CreateCategoriesSchemaType) {
     redirect('/sign-in')
   }
 
-  // FIND EXISTS FOLLOWING CATEGORY NAME
   const { name, icon, type } = parsedBody.data
 
   const existCategoryName = await prisma.category.findMany({

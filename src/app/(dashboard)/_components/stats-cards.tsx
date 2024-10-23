@@ -16,7 +16,7 @@ interface StatsCardsProps {
 
 function StatsCards({ from, to, userSettings }: StatsCardsProps) {
   const statsQuery = useQuery<GetBalanceStatsResponseType>({
-    queryKey: ['overview', 'stats'],
+    queryKey: ['overview', 'stats', from, to],
     queryFn: () =>
       fetch(
         `/api/stats/balance?from=${DateToUTCDate(from)}&to=${DateToUTCDate(to)}`,
