@@ -63,7 +63,7 @@ function page() {
 
 export default page
 
-export function CategoryList({ type }: { type: TransactionType }) {
+function CategoryList({ type }: { type: TransactionType }) {
   const categoriesQuery = useQuery({
     queryKey: ['categories', type],
     queryFn: () =>
