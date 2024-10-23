@@ -40,7 +40,7 @@ import CategoryPicker from './category-picker'
 
 import { CalendarIcon, Loader2 } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { CreateTransaction } from '../_actions/transactions'
+import { CreateTransaction } from '../transactions/_actions/transactions/transactions'
 import { toast } from 'sonner'
 import { DateToUTCDate } from '@/lib/helpers'
 
@@ -83,7 +83,6 @@ function CreateTransactionDialog({ trigger, type }: CreateTransactionsDialogProp
                 type,
             })
 
-            // AFTER CREATE THE TRANSACTION 
             queryClient.invalidateQueries({
                 queryKey: ["overview"]
             })

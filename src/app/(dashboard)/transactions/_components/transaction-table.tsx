@@ -40,6 +40,7 @@ import { Transaction } from '@prisma/client'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import DeleteTransactionDialog from './delete-transaction-dialog'
 import { translate } from '../../_components/create-transaction-dialog'
+import { TransactionType } from '@/lib/types'
 
 interface TransactionTableProps {
     from: Date
@@ -112,8 +113,7 @@ export const columns: ColumnDef<TransactionHistoryRow>[] = [
                     && "bg-rose-400/10 text-rose-500" 
                 )}
             >
-                {/* @ts-ignore */}
-                {translate[row.original.type]}
+                {translate[row.original.type as TransactionType]}
             </div>
         )
     },

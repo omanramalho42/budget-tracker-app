@@ -17,16 +17,20 @@ export const OverviewQuerySchema = z.object({
     return isValidRange
 })
 
-export async function GET(request: Request) {
-    const user = await currentUser()
+// export async function GET(request: Request) {
+//     const user = await currentUser()
 
-    if (!user) {
-        redirect("/sign-in")
-    }
+//     if (!user) {
+//         redirect("/sign-in")
+//     }
 
-    const { searchParams } = new URL(request.url)
-    const from = searchParams.get("from")
-    const to = searchParams.get("to")
+//     const { searchParams } = new URL(request.url)
+//     const from = searchParams.get("from")
+//     const to = searchParams.get("to")
 
+//     const days = differenceInDays(to, from)
+
+//     const isValidRange = days >= 0 && days <= MAX_DATE_RANGE_DAYS
     
-}
+//     return isValidRange
+// }

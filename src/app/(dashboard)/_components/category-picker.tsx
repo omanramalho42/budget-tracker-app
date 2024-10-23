@@ -13,7 +13,7 @@ import CreateCategoryDialog from './create-category-dialog'
 
 import { TransactionType } from '@/lib/types'
 import { CommandEmpty } from 'cmdk'
-import { Check, ChevronsUpDown, ChevronUpIcon } from 'lucide-react'
+import { Check, ChevronsUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface CategoryPickerProps {

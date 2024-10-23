@@ -2,7 +2,7 @@ import prisma from "@/lib/db"
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
     const user = await currentUser()
 
     if (!user) {
@@ -18,7 +18,6 @@ export type GetHistoryPeriodsResponseType =
     Awaited<
         ReturnType<typeof getHistoryPeriods>
     >
-
 
 async function getHistoryPeriods(userId: string) {
     const result = await prisma.monthHistory.findMany({
