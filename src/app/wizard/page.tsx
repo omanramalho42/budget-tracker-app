@@ -18,6 +18,7 @@ async function page() {
   if (!user) {
     redirect('/sign-in')
   }
+
   return (
     <div className="container flex max-w-2xl flex-col items-center justify-between gap-4">
       <div>

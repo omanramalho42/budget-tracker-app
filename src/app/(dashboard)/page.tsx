@@ -25,7 +25,7 @@ export default async function page() {
   })
 
   if (!userSettings) {
-    redirect('wizard')
+    redirect('/wizard')
   }
 
   return (

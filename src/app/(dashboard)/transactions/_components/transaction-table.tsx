@@ -88,7 +88,7 @@ export const columns: ColumnDef<TransactionHistoryRow>[] = [
   },
   {
     accessorKey: 'date',
-    header: 'date',
+    header: 'Data',
     cell: ({ row }) => {
       const date = new Date(row.original.date)
       const formattedDate = date.toLocaleDateString('default', {
@@ -239,7 +239,7 @@ function TransactionTable({ from, to }: TransactionTableProps) {
             }}
           >
             <DownloadIcon className="mr-2 h-2 w-2" />
-            Exportart csv
+            Exportar csv
           </Button>
           <DataTableViewOptions table={table} />
         </div>

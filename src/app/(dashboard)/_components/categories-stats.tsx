@@ -79,13 +79,13 @@ function CategoriesCard({
         </CardTitle>
       </CardHeader>
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2 p-4">
         {filteredData.length === 0 && (
-          <div className="flex h-60 w-full flex-col items-center justify-center">
+          <div className="flex h-60 w-full flex-col items-center justify-center text-center">
             Nenhuma informação para o período selecionado.
             <p className="text-sm text-muted-foreground">
-              Tente selecionar um diferente periodo ou adicone um novo{' '}
-              {type === 'income' ? 'Entradas' : 'Saídas'}
+              Tente selecionar um diferente periodo ou adicone uma nova{' '}
+              {type === 'income' ? 'entrada' : 'saída'}
             </p>
           </div>
         )}
