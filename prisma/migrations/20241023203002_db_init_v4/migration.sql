@@ -1,5 +1,3 @@
-set REPLICA IDENTITY using ALTER TABLE
-
 -- CreateTable
 CREATE TABLE "UserSettings" (
     "currency" TEXT NOT NULL,
