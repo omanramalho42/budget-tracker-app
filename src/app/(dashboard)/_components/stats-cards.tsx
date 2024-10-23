@@ -79,7 +79,7 @@ function StatCard({
 }: {
     formatter: Intl.NumberFormat
     icon: React.ReactNode
-    title: String
+    title: string
     value: number
 }) {
     const formatFn = useCallback((value: number) => {

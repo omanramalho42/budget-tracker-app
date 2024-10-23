@@ -47,6 +47,7 @@ interface TransactionTableProps {
     to: Date
 }
 
+// @typescript-eslint/no-explicit-any
 const emptyData: any[] = []
 type TransactionHistoryRow = GetTransactionHistoryResponseType[0]
 
@@ -154,6 +155,7 @@ function TransactionTable({ from, to }: TransactionTableProps) {
         .then((res) => res.json())
     })
 
+    // @typescript-eslint/no-explicit-any
     const handleExportCsv = (data: any[]) => {
         const csv = generateCsv(csvConfig)(data)
         download(csvConfig)(csv)

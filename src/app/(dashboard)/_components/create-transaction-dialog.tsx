@@ -1,3 +1,5 @@
+// @typescript-eslint/no-unused-vars
+
 "use client"
 
 import React, { useCallback, useState } from 'react'
@@ -173,13 +175,16 @@ function CreateTransactionDialog({ trigger, type }: CreateTransactionsDialogProp
                         <FormField
                             control={form.control}
                             name={"category"}
-                            render={({ field }) => (
+                            render={() => (
                                 <FormItem className='flex flex-col'>
                                     <FormLabel className='mr-5'>
                                         Categoria
                                     </FormLabel>
                                     <FormControl>
-                                        <CategoryPicker type={type} onChange={handleCategoryChange} />
+                                        <CategoryPicker
+                                            type={type}
+                                            onChange={handleCategoryChange}
+                                        />
                                     </FormControl>
                                     <FormDescription>
                                         Cateroria da transação (requerido)

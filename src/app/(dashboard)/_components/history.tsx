@@ -191,6 +191,7 @@ function History({ userSettings }: { userSettings: UserSettings }) {
 
 export default History
 
+// @typescript-eslint/no-explicit-any
 export function CustomTooltip({ active, payload, formatter }: any) {
     if (!active || !payload || payload.length === 0) return null
     
@@ -233,6 +234,7 @@ function TooltipRow({
 }: {
     formatter: Intl.NumberFormat
     label: string
+    // @typescript-eslint/no-explicit-any
     value: any
     bgColor: string
     textColor: string
