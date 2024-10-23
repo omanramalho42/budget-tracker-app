@@ -156,8 +156,9 @@ function History({ userSettings }: { userSettings: UserSettings }) {
                 </BarChart>
               </ResponsiveContainer>
             )}
+
             {!dataAvaliable && (
-              <Card className="flex h-[300px] flex-col items-center justify-center bg-background">
+              <Card className="flex h-[300px] flex-col items-center justify-center bg-background p-4 text-center">
                 Nenhuma informação para o período selecionado
                 <p className="text-sm text-muted-foreground">
                   Tente selecionar um período diferente ou adicionar uma nova
