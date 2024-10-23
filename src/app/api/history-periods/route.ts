@@ -10,6 +10,8 @@ export async function GET(request: Request) {
         redirect("/sign-in")
     }
 
+    if (request.method !== "GET") return
+
     const periods = await getHistoryPeriods(user.id)
 
     return Response.json(periods)

@@ -28,6 +28,8 @@ import { GetFormatterForCurrency } from '@/lib/helpers'
 import { Period, Timeframe } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
+// import { Formatter, NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent'
+
 
 function History({ userSettings }: { userSettings: UserSettings }) {
     const [timeframe, setTimeframe] = useState<Timeframe>("month")
@@ -192,7 +194,11 @@ function History({ userSettings }: { userSettings: UserSettings }) {
 export default History
 
 // @typescript-eslint/no-explicit-any
-export function CustomTooltip({ active, payload, formatter }: any) {
+export function CustomTooltip({ active = false, payload = [], formatter }: {
+    active?: boolean;
+    payload?: any[];
+    formatter: Intl.NumberFormat | any; 
+}) {
     if (!active || !payload || payload.length === 0) return null
     
     const data = payload[0].payload

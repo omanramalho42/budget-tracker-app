@@ -6,6 +6,10 @@ import { download, generateCsv, mkConfig } from "export-to-csv"
 
 import { GetTransactionHistoryResponseType } from '@/app/api/transactions-history/route'
 
+import { Transaction } from '@prisma/client'
+
+import DeleteTransactionDialog from './delete-transaction-dialog'
+
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -31,24 +35,33 @@ import { DataTableColumnHeader } from '@/components/datatable/column-header'
 import { DataTableFacetedFilter } from '@/components/datatable/faceted-filters'
 import { DataTableViewOptions } from '@/components/datatable/column-toggle'
 import { Button } from '@/components/ui/button'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu'
+
+import { translate } from '../../_components/create-transaction-dialog'
 
 import { DateToUTCDate } from '@/lib/helpers'
-
 import { cn } from '@/lib/utils'
-import { DownloadIcon, MoreHorizontal, TrashIcon } from 'lucide-react'
-import { Transaction } from '@prisma/client'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import DeleteTransactionDialog from './delete-transaction-dialog'
-import { translate } from '../../_components/create-transaction-dialog'
 import { TransactionType } from '@/lib/types'
+
+import {
+    DownloadIcon,
+    MoreHorizontal,
+    TrashIcon
+} from 'lucide-react'
 
 interface TransactionTableProps {
     from: Date
     to: Date
 }
 
-// @typescript-eslint/no-explicit-any
-const emptyData: any[] = []
+const emptyData: [] = []
 type TransactionHistoryRow = GetTransactionHistoryResponseType[0]
 
 export const columns: ColumnDef<TransactionHistoryRow>[] = [
@@ -80,7 +93,7 @@ export const columns: ColumnDef<TransactionHistoryRow>[] = [
     },
     {
         accessorKey: "date",
-        header: "Data",
+        header: "date",
         cell: ({ row }) => {
             const date = new Date(row.original.date)
             const formattedDate = date.toLocaleDateString("default", {
