@@ -413,7 +413,7 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
                       }}
                       id="compare-mode"
                     />
-                    <Label htmlFor="compare-mode">Compare</Label>
+                    <Label htmlFor="compare-mode">Comparar</Label>
                   </div>
                 )}
                 <div className="flex flex-col gap-2">
