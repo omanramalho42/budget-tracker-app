@@ -29,8 +29,6 @@ import { GetFormatterForCurrency } from '@/lib/helpers'
 import { Period, Timeframe } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
-// import { Formatter, NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent'
-
 function History({ userSettings }: { userSettings: UserSettings }) {
   const [timeframe, setTimeframe] = useState<Timeframe>('month')
   const [period, setPeriod] = useState<Period>({
@@ -208,7 +206,7 @@ export function CustomTooltip({
       />
       <TooltipRow
         formatter={formatter}
-        label="Total"
+        label="Valor"
         value={income - expense}
         bgColor="bg-gray-100"
         textColor="text-foreground"

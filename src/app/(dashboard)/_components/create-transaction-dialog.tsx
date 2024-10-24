@@ -52,6 +52,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { CreateTransaction } from '../transactions/_actions/transactions/transactions'
 import { toast } from 'sonner'
 import { DateToUTCDate } from '@/lib/helpers'
+import MoneyInput from '@/components/money-input'
 
 interface CreateTransactionsDialogProps {
   trigger: React.ReactNode
@@ -162,7 +163,17 @@ function CreateTransactionDialog({
                 <FormItem>
                   <FormLabel>Total</FormLabel>
                   <FormControl>
-                    <Input defaultValue={''} type="number" {...field} />
+                    <MoneyInput
+                      form={form}
+                      label="Valor"
+                      placeholder="Valor"
+                      {...field}
+                    />
+                    {/* <Input
+                      defaultValue={''}
+                      type="number"
+                      {...field}
+                    /> */}
                   </FormControl>
                   <FormDescription>
                     Valor total da transação (requerido)

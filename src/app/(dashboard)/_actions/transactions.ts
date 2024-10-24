@@ -23,7 +23,6 @@ export async function DeleteTransaction(form: CreateTransactionSchemaType) {
     redirect('/sign-in')
   }
 
-  // FIND EXISTS FOLLOWING CATEGORY NAME
   const { amount, category, date, type, description } = parsedBody.data
 
   const categoryRow = await prisma.category.findFirst({
