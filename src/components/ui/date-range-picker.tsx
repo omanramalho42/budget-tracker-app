@@ -550,7 +550,7 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
             }}
             variant="ghost"
           >
-            Cancel
+            Cancelar
           </Button>
           <Button
             onClick={() => {
@@ -563,7 +563,7 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
               }
             }}
           >
-            Update
+            Atualizar
           </Button>
         </div>
       </PopoverContent>

@@ -17,18 +17,18 @@ import { Sheet, SheetContent, SheetTrigger } from './ui/sheet'
 import { Menu } from 'lucide-react'
 
 interface ItemsProps {
-  label: 'Dashboard' | 'Transactions' | 'Manage'
+  label: 'Painel' | 'Transações' | 'Gerenciar'
   link: string
 }
 
 const items: ItemsProps[] = [
-  { label: 'Dashboard', link: '/' },
-  { label: 'Transactions', link: '/transactions' },
-  { label: 'Manage', link: '/manage' },
+  { label: 'Painel', link: '/' },
+  { label: 'Transações', link: '/transactions' },
+  { label: 'Gerenciar', link: '/manage' },
 ]
 
 interface NavbarItemProps {
-  label: 'Dashboard' | 'Transactions' | 'Manage'
+  label: 'Painel' | 'Transações' | 'Gerenciar'
   link: string
   onClickCallback?: () => void
 }

@@ -40,7 +40,7 @@ export default async function page() {
                   variant={'outline'}
                   className="border-emerald-500 bg-emerald-950 text-white hover:bg-emerald-900 hover:text-white"
                 >
-                  Nova Entrada 🤑
+                  Novo depósito 🤑
                 </Button>
               }
               type="income"
@@ -51,7 +51,7 @@ export default async function page() {
                   variant={'outline'}
                   className="border-rose-500 bg-rose-950 text-white hover:bg-rose-900 hover:text-white"
                 >
-                  Nova Saída 😡
+                  Nova Retirada 😡
                 </Button>
               }
               type="expanse"

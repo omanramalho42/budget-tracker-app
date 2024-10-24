@@ -38,7 +38,7 @@ function StatsCards({ from, to, userSettings }: StatsCardsProps) {
         <StatCard
           formatter={formatter}
           value={income}
-          title="Entrada"
+          title="Depósito"
           icon={
             <TrendingUp className="h-12 w-12 items-center rounded-lg bg-emerald-400/10 p-2 text-emerald-500" />
           }
@@ -49,7 +49,7 @@ function StatsCards({ from, to, userSettings }: StatsCardsProps) {
         <StatCard
           formatter={formatter}
           value={expense}
-          title="Saída"
+          title="Retirada"
           icon={
             <TrendingDown className="h-12 w-12 items-center rounded-lg bg-rose-400/10 p-2 text-rose-500" />
           }

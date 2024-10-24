@@ -213,8 +213,8 @@ function TransactionTable({ from, to }: TransactionTableProps) {
               title="Tipo"
               column={table.getColumn('type')}
               options={[
-                { label: 'Entrada', value: 'income' },
-                { label: 'Saída', value: 'expanse' },
+                { label: 'Depósito', value: 'income' },
+                { label: 'Retirada', value: 'expanse' },
               ]}
             />
           )}

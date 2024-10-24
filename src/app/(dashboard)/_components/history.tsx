@@ -70,14 +70,14 @@ function History({ userSettings }: { userSettings: UserSettings }) {
                 className="flex items-center gap-2 text-sm"
               >
                 <div className="h-4 w-4 rounded-full bg-emerald-500"></div>
-                Entrada
+                Depósitos
               </Badge>
               <Badge
                 variant={'outline'}
                 className="flex items-center gap-2 text-sm"
               >
                 <div className="h-4 w-4 rounded-full bg-rose-500"></div>
-                Saída
+                Retiradas
               </Badge>
             </div>
           </CardTitle>
@@ -133,14 +133,14 @@ function History({ userSettings }: { userSettings: UserSettings }) {
                   />
                   <Bar
                     dataKey={'income'}
-                    label="Entrada"
+                    label="Depósito"
                     fill="url(#incomeBar)"
                     radius={4}
                     className="cursor-pointer"
                   />
                   <Bar
                     dataKey={'expense'}
-                    label="Saída"
+                    label="Retirada"
                     fill="url(#expenseBar)"
                     radius={4}
                     className="cursor-pointer"
@@ -192,14 +192,14 @@ export function CustomTooltip({
     <div className="min-w-[300px] rounded border bg-background p-4">
       <TooltipRow
         formatter={formatter}
-        label="Saída"
+        label="Retirada"
         value={expense}
         bgColor="bg-red-500"
         textColor="text-red-500"
       />
       <TooltipRow
         formatter={formatter}
-        label="Entrada"
+        label="Depósito"
         value={income}
         bgColor="bg-emerald-500"
         textColor="text-emerald-500"

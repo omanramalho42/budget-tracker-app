@@ -59,7 +59,7 @@ interface CreateTransactionsDialogProps {
   type: TransactionType
 }
 
-export const translate = { income: 'entrada', expanse: 'saída' }
+export const translate = { income: 'depósito', expanse: 'retirada' }
 
 function CreateTransactionDialog({
   trigger,
