@@ -13,8 +13,6 @@ export async function updateUserCurrency(currency: string) {
     currency,
   })
 
-  // throw new Error("teste")
-
   if (!parsedBody.success) throw parsedBody.error
 
   const user = await currentUser()
