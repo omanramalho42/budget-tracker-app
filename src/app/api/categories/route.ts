@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 
 import { currentUser } from '@clerk/nextjs/server'
 
-import prisma from '@/lib/db'
+import { prisma } from '@/lib/prisma'
 
 export async function GET(request: Request) {
   const user = await currentUser()
