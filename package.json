@@ -55,7 +55,7 @@
     "export-to-csv": "^1.4.0",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.453.0",
-    "next": "14.2.15",
+    "next": "14.2.35",
     "next-themes": "^0.3.0",
     "prisma": "^5.21.1",
     "react": "^18",
