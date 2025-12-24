@@ -9,7 +9,7 @@ import CreateTransactionDialog from './_components/create-transaction-dialog'
 import Overview from './_components/overview'
 import History from './_components/history'
 
-import prisma from '@/lib/db'
+import { prisma } from '@/lib/prisma'
 
 export default async function page() {
   const user = await currentUser()
