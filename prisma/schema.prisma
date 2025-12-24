@@ -6,18 +6,11 @@
 
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["tracing"]
+  // output   = "./src/app/generated/prisma"
 }
-
-// datasource db {
-//   provider = "sqlite"
-//   url      = "file:./dev.db"
-// }
 
 datasource db {
   provider = "postgresql"
-  url      = env("POSTGRES_URL")
-  directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
 // model User {

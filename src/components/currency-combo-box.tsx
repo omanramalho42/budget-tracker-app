@@ -45,8 +45,6 @@ export function CurrencyComboBox() {
     queryFn: () => fetch('/api/user-settings').then((res) => res.json()),
   })
 
-  console.log('@@@ USER SETTINGS:', userSettings)
-
   useEffect(() => {
     if (!userSettings.data) return
 

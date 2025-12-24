@@ -1,7 +1,7 @@
 import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { OverviewQuerySchema } from '@/schema/overview'
-import prisma from '@/lib/db'
+import { prisma } from '@/lib/prisma'
 
 export async function GET(request: Request) {
   const user = await currentUser()

@@ -232,7 +232,6 @@ function CreateTransactionDialog({
                           selected={field.value}
                           onSelect={(value) => {
                             if (!value) return
-                            console.log('@@@ CALENDAR', value)
                             field.onChange(value)
                           }}
                           initialFocus

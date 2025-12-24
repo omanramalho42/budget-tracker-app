@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 
 import { currentUser } from '@clerk/nextjs/server'
 
-import prisma from '@/lib/db'
+import { prisma } from '@/lib/prisma'
 import { OverviewQuerySchema } from '../../../schema/overview'
 import { GetFormatterForCurrency } from '@/lib/helpers'
 
