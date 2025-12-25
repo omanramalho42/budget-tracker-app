@@ -13,13 +13,17 @@ datasource db {
 }
 
 model User {
-  id        String @id @default(uuid())
+  id          String   @id @default(uuid())
+  email       String
   
-  fullName  String
-  email     String
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  firstName   String?
+  lastName    String?
+  imageUrl    String?
+  
+  clerkUserId String
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   categories   Category[]
   transactions Transaction[]
@@ -28,12 +32,12 @@ model User {
   monthHistory  MonthHistory[]
   yearHistory   YearHistory[]
 
-  @@unique([id, email])
+  @@unique([id, email, clerkUserId])
 }
 
 model UserSettings {
   currency  String 
-  userId    String @id
+  userId    String    @id
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

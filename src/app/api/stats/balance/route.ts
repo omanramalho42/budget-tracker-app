@@ -10,29 +10,39 @@ export async function GET(request: Request) {
     redirect('/sign-in')
   }
 
-  const { searchParams } = new URL(request.url)
-  const from = searchParams.get('from')
-  const to = searchParams.get('to')
-
-  const queryParams = OverviewQuerySchema.safeParse({
-    from,
-    to,
+  // VERIFICAR SE O USUARIO EXISTE NO BD
+  const existUserOnDb = await prisma.user.findFirst({
+    where: {
+      clerkUserId: user.id,
+    },
   })
 
-  if (!queryParams.success) {
-    return Response.json(queryParams.error.message, {
-      status: 400,
+  if(existUserOnDb) {
+    const { searchParams } = new URL(request.url)
+    const from = searchParams.get('from')
+    const to = searchParams.get('to')
+  
+    const queryParams = OverviewQuerySchema.safeParse({
+      from,
+      to,
     })
+  
+    if (!queryParams.success) {
+      return Response.json(queryParams.error.message, {
+        status: 400,
+      })
+    }
+  
+    const stats = await getBalanceStats(
+      existUserOnDb.id,
+      queryParams.data.from,
+      queryParams.data.to,
+    )
+  
+    return Response.json(stats)
   }
-
-  const stats = await getBalanceStats(
-    user.id,
-    queryParams.data.from,
-    queryParams.data.to,
-  )
-
-  return Response.json(stats)
 }
+
 
 export type GetBalanceStatsResponseType = Awaited<
   ReturnType<typeof getBalanceStats>

@@ -7,26 +7,36 @@ import { redirect } from 'next/navigation'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(request: Request) {
   const user = await currentUser()
-
+  
+  // VERIFICAR SE O USUARIO EXISTE NO CLERK
   if (!user) {
-    redirect('/sign-in?redirect=user-setings')
+    redirect('/sign-in?redirect=user-settings')
   }
 
-  let userSettings = await prisma.userSettings.findUnique({
+  // VERIFICAR SE O USUARIO EXISTE NO BD
+  const existUserOnDb = await prisma.user.findFirst({
     where: {
-      userId: user.id,
+      clerkUserId: user.id,
     },
   })
 
-  if (!userSettings) {
-    userSettings = await prisma.userSettings.create({
-      data: {
-        userId: user.id,
-        currency: 'USD',
+  if(existUserOnDb) {
+    let userSettings = await prisma.userSettings.findUnique({
+      where: {
+        userId: existUserOnDb?.id,
       },
     })
-  }
 
-  revalidatePath('/')
-  return Response.json(userSettings)
+    if (!userSettings) {
+      userSettings = await prisma.userSettings.create({
+        data: {
+          userId: existUserOnDb?.id,
+          currency: 'USD',
+        },
+      })
+    }
+
+    revalidatePath('/')
+    return Response.json(userSettings)
+  }
 }

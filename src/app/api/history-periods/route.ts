@@ -10,11 +10,20 @@ export async function GET(request: Request) {
     redirect('/sign-in')
   }
 
+  // VERIFICAR SE O USUARIO EXISTE NO BD
+  const existUserOnDb = await prisma.user.findFirst({
+    where: {
+      clerkUserId: user.id,
+    },
+  })
+
   if (request.method !== 'GET') return
 
-  const periods = await getHistoryPeriods(user.id)
-
-  return Response.json(periods)
+  if(existUserOnDb) {
+    const periods = await getHistoryPeriods(existUserOnDb.id)
+  
+    return Response.json(periods)
+  }
 }
 
 export type GetHistoryPeriodsResponseType = Awaited<

@@ -13,14 +13,24 @@ import { prisma } from '@/lib/prisma'
 
 export default async function page() {
   const user = await currentUser()
-
+  
   if (!user) {
+    redirect('/sign-in')
+  }
+
+  const userOnDb = await prisma.user.findFirst({
+    where: {
+      clerkUserId: user.id
+    },
+  })
+
+  if (!userOnDb) {
     redirect('/sign-in')
   }
 
   const userSettings = await prisma.userSettings.findUnique({
     where: {
-      userId: user.id,
+      userId: userOnDb.id,
     },
   })
 

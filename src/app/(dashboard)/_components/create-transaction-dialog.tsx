@@ -53,6 +53,7 @@ import { CreateTransaction } from '../transactions/_actions/transactions/transac
 import { toast } from 'sonner'
 import { DateToUTCDate } from '@/lib/helpers'
 import MoneyInput from '@/components/money-input'
+import { useRouter } from 'next/navigation'
 
 interface CreateTransactionsDialogProps {
   trigger: React.ReactNode
@@ -65,6 +66,7 @@ function CreateTransactionDialog({
   trigger,
   type,
 }: CreateTransactionsDialogProps) {
+  const router = useRouter()
   const [open, setOpen] = useState<boolean>(false)
 
   const form = useForm<CreateTransactionSchemaType>({
@@ -101,10 +103,12 @@ function CreateTransactionDialog({
         type,
       })
 
-      queryClient.invalidateQueries({
+       queryClient.invalidateQueries({
         queryKey: ['overview'],
+        exact: false,
       })
 
+      router.refresh() // 🔥 força RSC a revalidar
       setOpen((prev) => !prev)
     },
   })
