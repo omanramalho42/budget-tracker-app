@@ -12,35 +12,71 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id        String @id @default(uuid())
+  
+  fullName  String
+  email     String
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  categories   Category[]
+  transactions Transaction[]
+  settings     UserSettings?
+
+  monthHistory  MonthHistory[]
+  yearHistory   YearHistory[]
+
+  @@unique([id, email])
+}
+
 model UserSettings {
   currency  String 
   userId    String @id
 
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Category {
-  createdAt DateTime @default(now())
+  id        String   @id @default(uuid())
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
   name      String
   type      String   @default("income")
   icon      String
+
   userId    String
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  transactions Transaction[]
 
   @@unique([name, userId, type])
 }
 
 model Transaction {
   id            String   @id @default(uuid())
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   amount        Float      
   description   String
   date          DateTime
-  userId        String
-  type          String @default("income")
+  type          String  @default("income")
 
-  category      String
   categoryIcon  String
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 }
 
 model MonthHistory {
@@ -52,12 +88,15 @@ model MonthHistory {
   expanse       Float
 
   userId        String
+  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
 
   @@id([day, month, year, userId])
 }
 
 model YearHistory {
-  userId        String
+  userId         String
+  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   month         Int      
   year          Int

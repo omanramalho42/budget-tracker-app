@@ -14,9 +14,8 @@ import {
 } from '@/schema/categories'
 
 export async function CreateCategory(form: CreateCategoriesSchemaType) {
-  console.log("passei aqui!");
   const parsedBody = CreateCategoriesSchema.safeParse(form)
-  console.log(parsedBody, "parsedBody")
+
   if (!parsedBody.success) throw parsedBody.error
 
   const user = await currentUser()
@@ -25,7 +24,7 @@ export async function CreateCategory(form: CreateCategoriesSchemaType) {
   }
 
   const { name, icon, type } = parsedBody.data
-  console.log(name, icon, type, "informations")
+  
   const existCategoryName = await prisma.category.findMany({
     where: {
       name,

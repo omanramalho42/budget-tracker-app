@@ -62,8 +62,6 @@ export default function CategoryPicker({
     [setValue, setOpen],
   )
 
-  console.log(selectedCategory, 'selected category')
-
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>

@@ -77,7 +77,6 @@ function CreateCategoryDialog({
       return await CreateCategory(values)
     },
     onSuccess: async (data: Category) => {
-      console.log(data, "data")
       form.reset({
         name: '',
         icon: '',
@@ -97,7 +96,6 @@ function CreateCategoryDialog({
       setOpen((prev) => !prev)
     },
     onError: (error) => {
-      console.log(error.message, "erro aqui!")
       toast.error('Algo aconteceu de errado...', {
         id: 'create-category',
       })
@@ -106,7 +104,6 @@ function CreateCategoryDialog({
 
   const onSubmit = useCallback(
     (values: CreateCategoriesSchemaType) => {
-      console.log(values)
       
       toast.loading('Criando categoria...', {
         id: 'create-category',

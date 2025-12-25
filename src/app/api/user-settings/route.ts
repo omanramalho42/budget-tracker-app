@@ -4,13 +4,6 @@ import { revalidatePath } from 'next/cache'
 
 import { redirect } from 'next/navigation'
 
-// async function getAllUsers() {
-//     // "create your scrips below"
-//     const allUsers =
-//         await prisma.user.findMany()
-//     console.log(allUsers)
-// }
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(request: Request) {
   const user = await currentUser()
@@ -36,20 +29,4 @@ export async function GET(request: Request) {
 
   revalidatePath('/')
   return Response.json(userSettings)
-
-  // getAllUsers()
-  //     .then(
-  //         async () => {
-  //             await prisma.$disconnect()
-  //             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  //             const userSettings = await getAllUsers();
-  //         }
-  //     )
-  //     .catch(
-  //         async (e: Error) => {
-  //             console.error(e)
-  //             await prisma.$disconnect()
-  //             process.exit(1)
-  //         }
-  //     )
 }
