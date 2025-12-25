@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/alert-dialog'
 
 import { TransactionType } from '@/lib/types'
+import { DeleteCategorySchemaType } from '@/schema/categories'
 
 interface DeleteCategoryDialogProps {
   category: Category
@@ -34,7 +35,9 @@ function DeleteCategoryDialog({
   const queryClient = useQueryClient()
 
   const deleteMutation = useMutation({
-    mutationFn: DeleteCategory,
+    mutationFn: async (values: DeleteCategorySchemaType) => {
+      return await DeleteCategory(values)
+    },
     onSuccess: async () => {
       toast.success('Categoria deletada com sucesso! 🎉', {
         id: categoryIdentifier,

@@ -14,23 +14,24 @@ import {
 } from '@/schema/categories'
 
 export async function CreateCategory(form: CreateCategoriesSchemaType) {
+  console.log("passei aqui!");
   const parsedBody = CreateCategoriesSchema.safeParse(form)
-
+  console.log(parsedBody, "parsedBody")
   if (!parsedBody.success) throw parsedBody.error
 
   const user = await currentUser()
   if (!user) {
     redirect('/sign-in')
   }
-
+  console.log(user, 'user')
   const { name, icon, type } = parsedBody.data
-
+  console.log(name, icon, type, "informations")
   const existCategoryName = await prisma.category.findMany({
     where: {
       name,
     },
   })
-
+  console.log(existCategoryName, "exist?")
   if (existCategoryName.length > 0) {
     throw new Error('Already exists category with same name...')
   }
@@ -41,7 +42,12 @@ export async function CreateCategory(form: CreateCategoriesSchemaType) {
       name,
       icon,
       type,
-    },
+    } as {
+      userId: string;
+      name: string;
+      icon: string;
+      type: "income" | "expanse";
+    }
   })
 }
 
