@@ -6,34 +6,16 @@
 
 generator client {
   provider = "prisma-client-js"
-  // output   = "./src/app/generated/prisma"
-  // previewFeatures = ["tracing"]
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-// model User {
-//   id            Int      @id @default(autoincrement())
-//   // createdAt     DateTime @default(now())
-//   // email         String   @unique
-//   // name          String?
-//   // role          Role     @default(USER)
-//   transaction   Transaction[]
-//   category      Category[]
-//   userSettings  UserSettings[]
-//   monthHistory  MonthHistory[]
-//   yearHistory   YearHistory[]
-//   // profiles  Profile[]
-// }
-
 model UserSettings {
   currency  String 
   userId    String @id
 
-  // id        Int      @id @default(autoincrement())
-  // user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Category {
@@ -42,10 +24,6 @@ model Category {
   type      String   @default("income")
   icon      String
   userId    String
-
-  // id        Int      @id @default(autoincrement())
-  // updatedAt DateTime @updatedAt
-  // user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([name, userId, type])
 }
@@ -63,8 +41,6 @@ model Transaction {
 
   category      String
   categoryIcon  String
-
-  // user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model MonthHistory {
@@ -76,12 +52,6 @@ model MonthHistory {
   expanse       Float
 
   userId        String
-  
-  // createdAt     DateTime @default(now())
-  // id            Int      @id @default(autoincrement())
-  // updatedAt     DateTime @updatedAt
-  // user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  // userId        Int?
 
   @@id([day, month, year, userId])
 }
@@ -95,26 +65,5 @@ model YearHistory {
   income        Float
   expanse       Float
 
-  // createdAt     DateTime @default(now())
-  // id            Int      @id @default(autoincrement())
-  // updatedAt     DateTime @updatedAt
-  // user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  // userId        Int?
-
   @@id([month, year, userId])
 }
-
-// model Profile {
-//   id        Int      @id @default(autoincrement())
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-//   published Boolean  @default(false)
-//   title     String   @db.VarChar(255)
-//   user      User?    @relation(fields: [userId], references: [id])
-//   userId    Int?
-// }
-
-// enum Role {
-//   USER
-//   ADMIN
-// }

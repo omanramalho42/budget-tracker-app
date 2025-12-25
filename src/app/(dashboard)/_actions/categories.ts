@@ -23,15 +23,15 @@ export async function CreateCategory(form: CreateCategoriesSchemaType) {
   if (!user) {
     redirect('/sign-in')
   }
-  console.log(user, 'user')
+
   const { name, icon, type } = parsedBody.data
   console.log(name, icon, type, "informations")
   const existCategoryName = await prisma.category.findMany({
     where: {
       name,
+      userId: user.id
     },
   })
-  console.log(existCategoryName, "exist?")
   if (existCategoryName.length > 0) {
     throw new Error('Already exists category with same name...')
   }
