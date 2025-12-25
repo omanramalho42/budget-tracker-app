@@ -38,7 +38,5 @@ export async function GET(request: Request) {
 
     revalidatePath('/')
     return Response.json(userSettings)
-  } else {
-    redirect('/sign-in?redirect=user-settings')
   }
 }
