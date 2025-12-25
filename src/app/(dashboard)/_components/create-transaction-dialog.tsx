@@ -85,7 +85,9 @@ function CreateTransactionDialog({
   const queryClient = useQueryClient()
 
   const { mutate, isPending } = useMutation({
-    mutationFn: CreateTransaction,
+    mutationFn: async (values: CreateTransactionSchemaType) => {
+      return await CreateTransaction(values)
+    },
     onSuccess: () => {
       toast.success('Transação criada com sucesso! 🎉', {
         id: 'create-transaction',

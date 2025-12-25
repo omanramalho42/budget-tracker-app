@@ -30,7 +30,9 @@ function DeleteTransactionDialog({
   const queryClient = useQueryClient()
 
   const deleteMutation = useMutation({
-    mutationFn: DeleteTransaction,
+    mutationFn: async (values: string) => {
+      return await DeleteTransaction(values)
+    },
     onSuccess: async () => {
       toast.success('Transação deletada com sucesso! 🎉', {
         id: transactionId,

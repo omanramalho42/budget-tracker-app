@@ -1,0 +1,5 @@
+onlyBuiltDependencies:
+  - '@clerk/shared'
+  - '@prisma/engines'
+  - prisma
+  - unrs-resolver
