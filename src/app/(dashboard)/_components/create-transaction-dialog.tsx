@@ -90,26 +90,33 @@ function CreateTransactionDialog({
     mutationFn: async (values: CreateTransactionSchemaType) => {
       return await CreateTransaction(values)
     },
-    onSuccess: () => {
-      toast.success('Transação criada com sucesso! 🎉', {
+    onSuccess: async () => {
+  toast.success('Transação criada com sucesso! 🎉', {
+    id: 'create-transaction',
+  })
+
+  form.reset({
+    amount: 0,
+    category: undefined,
+    date: new Date(),
+    description: '',
+    type,
+  })
+
+  await queryClient.invalidateQueries({
+    queryKey: ['overview'],
+    exact: false,
+  })
+
+  router.refresh()
+
+  setOpen(false)
+},
+
+    onError: () => {
+      toast.error('Aconteceu algo de errado', {
         id: 'create-transaction',
       })
-
-      form.reset({
-        amount: 0,
-        category: undefined,
-        date: new Date(),
-        description: '',
-        type,
-      })
-
-       queryClient.invalidateQueries({
-        queryKey: ['overview'],
-        exact: false,
-      })
-
-      router.refresh() // 🔥 força RSC a revalidar
-      setOpen((prev) => !prev)
     },
   })
 
@@ -175,11 +182,6 @@ function CreateTransactionDialog({
                       placeholder="Valor"
                       {...field}
                     />
-                    {/* <Input
-                      defaultValue={''}
-                      type="number"
-                      {...field}
-                    /> */}
                   </FormControl>
                   <FormDescription>
                     Valor total da transação (requerido)

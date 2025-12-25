@@ -30,10 +30,8 @@ export async function CreateTransaction(form: CreateTransactionSchemaType) {
 
   // FIND EXISTS FOLLOWING CATEGORY NAME
   if(existUserOnDb) {
-    console.log(existUserOnDb, "user on db")
     const { amount, category, date, type, description } = parsedBody.data
-    
-    console.log(amount, category, date, type, description, "data" );
+  
 
     const categoryRow = await prisma.category.findFirst({
       where: {
@@ -42,7 +40,6 @@ export async function CreateTransaction(form: CreateTransactionSchemaType) {
         type: type,
       },
     })
-    console.log(categoryRow, "categoryRow")
     if (!categoryRow) throw new Error('Category not found')
 
     await prisma.$transaction([

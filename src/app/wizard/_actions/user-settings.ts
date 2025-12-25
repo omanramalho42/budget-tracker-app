@@ -29,8 +29,6 @@ export async function updateUserCurrency(currency: string) {
 
   //USUARIO EXISTE NO BANCO DE DADOS
   if(existUserOnDb) {
-    console.log("user on db check")
-
     //PROCURAR AS CONFIGURAÇÕES DO USUÁRIO
     let userSettings = await prisma.userSettings.findUnique({
       where: {
@@ -39,20 +37,25 @@ export async function updateUserCurrency(currency: string) {
     })
 
     
-    if (userSettings) {
-      console.log("user settings check")
-      
-      const userSettigs = await prisma.userSettings.update({
-        where: {
-          userId: existUserOnDb.id,
-        },
+    if (!userSettings) {
+      // Create settings if they don't exist
+      userSettings = await prisma.userSettings.create({
         data: {
+          userId: existUserOnDb.id,
           currency,
         },
       })
+      return userSettings
+     }
 
-      return userSettigs
-    }
+    return await prisma.userSettings.update({
+      where: {
+        userId: existUserOnDb.id,
+      },
+      data: {
+        currency,
+      },
+    })
   }
-
+  throw new Error('User not found in database')
 }

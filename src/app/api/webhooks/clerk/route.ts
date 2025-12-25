@@ -10,12 +10,8 @@ export async function POST(req: NextRequest) {
     // For this guide, log payload to console
     const { id } = evt.data
     const eventType = evt.type
-    console.log(`Received webhook with ID ${id} and event type of ${eventType}`)
-    console.log('Webhook payload:', evt.data)
 
     if (evt.type === 'user.created') {
-      console.log('userId:', evt.data.id)
-      
       const {
         id,
         email_addresses,
@@ -39,7 +35,6 @@ export async function POST(req: NextRequest) {
           status: 201,
         })
       } catch (error) {
-        console.log("Error: Failed to store event in the database:", error)
         return new Response("Error: Failed to store event in the database", {
           status: 500,
         })
