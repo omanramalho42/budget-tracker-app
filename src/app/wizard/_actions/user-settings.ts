@@ -17,17 +17,62 @@ export async function updateUserCurrency(currency: string) {
 
   const user = await currentUser()
   if (!user) {
-    redirect('/sign-in')
+    redirect('/sign-in?redirect=user-settings')
   }
 
-  const userSettigs = await prisma.userSettings.update({
+  // VERIFICAR SE O USUARIO EXISTE NO BD
+  const userDb = await prisma.user.findFirst({
     where: {
-      userId: user.id,
+      clerkUserId: user.id,
     },
-    data: {
-      currency,
-    },
-  })
+  });
 
-  return userSettigs
+  //USUARIO EXISTE NO BANCO DE DADOS
+  if(userDb) {
+    //PROCURAR AS CONFIGURAÇÕES DO USUÁRIO
+    let userSettings = await prisma.userSettings.findUnique({
+      where: {
+        userId: userDb.id,
+      },
+    })
+
+    
+    if (!userSettings) {
+      // Create settings if they don't exist
+      userSettings = await prisma.userSettings.create({
+        data: {
+          userId: userDb.id,
+          currency,
+        },
+      })
+      return userSettings
+     }
+
+    return await prisma.userSettings.update({
+      where: {
+        userId: userDb.id,
+      },
+      data: {
+        currency,
+      },
+    })
+  } 
+  // else {
+  //   return await prisma.user.create({
+  //     data: {
+  //       email: user.emailAddresses[0].emailAddress,
+  //       firstName: user.firstName,
+  //       lastName: user.lastName,
+  //       imageUrl: user.imageUrl,
+  //       clerkUserId: user.id,
+  //       settings: {
+  //         create: {
+  //           currency,
+  //         },
+  //       },
+  //     }
+  //   })
+  // }
+  
+  throw new Error('User not found in database')
 }

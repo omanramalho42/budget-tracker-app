@@ -14,8 +14,6 @@ import {
 export async function CreateTransaction(form: CreateTransactionSchemaType) {
   const parsedBody = CreateTransactionSchema.safeParse(form)
 
-  // throw new Error("teste")
-
   if (!parsedBody.success) throw new Error(parsedBody.error.message)
 
   const user = await currentUser()
@@ -23,81 +21,93 @@ export async function CreateTransaction(form: CreateTransactionSchemaType) {
     redirect('/sign-in')
   }
 
-  // FIND EXISTS FOLLOWING CATEGORY NAME
-  const { amount, category, date, type, description } = parsedBody.data
-
-  const categoryRow = await prisma.category.findFirst({
+  // VERIFICAR SE O USUARIO EXISTE NO BD
+  const userDb = await prisma.user.findFirst({
     where: {
-      userId: user.id,
-      name: category,
+      clerkUserId: user.id,
     },
   })
 
-  if (!categoryRow) throw new Error('Category not found')
+  // FIND EXISTS FOLLOWING CATEGORY NAME
+  if(userDb) {
+    const { amount, category, date, type, description } = parsedBody.data
+  
 
-  await prisma.$transaction([
-    prisma.transaction.create({
-      data: {
-        userId: user.id,
-        amount,
-        date,
-        description: description || '',
-        type,
-        category,
-        categoryIcon: categoryRow.icon,
-      },
-    }),
-
-    prisma.monthHistory.upsert({
+    const categoryRow = await prisma.category.findFirst({
       where: {
-        day_month_year_userId: {
-          userId: user.id,
+        userId: userDb.id,
+        name: category,
+        type: type,
+      },
+    })
+    if (!categoryRow) throw new Error('Category not found')
+
+    await prisma.$transaction([
+      prisma.transaction.create({
+        data: {
+          userId: userDb.id,
+          amount,
+          date,
+          description: description || '',
+          type,
+          categoryIcon: categoryRow.icon,
+          categoryId: categoryRow.id
+        }, include: {
+          category: true
+        }
+      }),
+  
+      prisma.monthHistory.upsert({
+        where: {
+          day_month_year_userId: {
+            userId: userDb.id,
+            day: date.getUTCDate(),
+            month: date.getUTCMonth(),
+            year: date.getUTCFullYear(),
+          },
+        },
+        create: {
+          userId: userDb.id,
           day: date.getUTCDate(),
           month: date.getUTCMonth(),
           year: date.getUTCFullYear(),
+          expanse: type === 'expanse' ? amount : 0,
+          income: type === 'income' ? amount : 0,
         },
-      },
-      create: {
-        userId: user.id,
-        day: date.getUTCDate(),
-        month: date.getUTCMonth(),
-        year: date.getUTCFullYear(),
-        expanse: type === 'expanse' ? amount : 0,
-        income: type === 'income' ? amount : 0,
-      },
-      update: {
-        expanse: {
-          increment: type === 'expanse' ? amount : 0,
+        update: {
+          expanse: {
+            increment: type === 'expanse' ? amount : 0,
+          },
+          income: {
+            increment: type === 'income' ? amount : 0,
+          },
         },
-        income: {
-          increment: type === 'income' ? amount : 0,
+      }),
+  
+      prisma.yearHistory.upsert({
+        where: {
+          month_year_userId: {
+            userId: userDb.id,
+            month: date.getUTCMonth(),
+            year: date.getUTCFullYear(),
+          },
         },
-      },
-    }),
-
-    prisma.yearHistory.upsert({
-      where: {
-        month_year_userId: {
-          userId: user.id,
+        create: {
+          userId: userDb.id,
           month: date.getUTCMonth(),
           year: date.getUTCFullYear(),
+          expanse: type === 'expanse' ? amount : 0,
+          income: type === 'income' ? amount : 0,
         },
-      },
-      create: {
-        userId: user.id,
-        month: date.getUTCMonth(),
-        year: date.getUTCFullYear(),
-        expanse: type === 'expanse' ? amount : 0,
-        income: type === 'income' ? amount : 0,
-      },
-      update: {
-        expanse: {
-          increment: type === 'expanse' ? amount : 0,
+        update: {
+          expanse: {
+            increment: type === 'expanse' ? amount : 0,
+          },
+          income: {
+            increment: type === 'income' ? amount : 0,
+          },
         },
-        income: {
-          increment: type === 'income' ? amount : 0,
-        },
-      },
-    }),
-  ])
+      }),
+    ])
+  }
 }

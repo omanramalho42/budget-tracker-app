@@ -14,9 +14,8 @@ import {
 } from '@/schema/categories'
 
 export async function CreateCategory(form: CreateCategoriesSchemaType) {
-  console.log("passei aqui!");
   const parsedBody = CreateCategoriesSchema.safeParse(form)
-  console.log(parsedBody, "parsedBody")
+
   if (!parsedBody.success) throw parsedBody.error
 
   const user = await currentUser()
@@ -24,31 +23,38 @@ export async function CreateCategory(form: CreateCategoriesSchemaType) {
     redirect('/sign-in')
   }
 
-  const { name, icon, type } = parsedBody.data
-  console.log(name, icon, type, "informations")
-  const existCategoryName = await prisma.category.findMany({
+  // VERIFICAR SE O USUARIO EXISTE NO BD
+  const userDb = await prisma.user.findFirst({
     where: {
-      name,
-      userId: user.id
+      clerkUserId: user.id,
     },
   })
-  if (existCategoryName.length > 0) {
-    throw new Error('Already exists category with same name...')
-  }
 
-  return await prisma.category.create({
-    data: {
-      userId: user.id,
-      name,
-      icon,
-      type,
-    } as {
-      userId: string;
-      name: string;
-      icon: string;
-      type: "income" | "expanse";
-    }
-  })
+  
+  if (userDb) {
+    const { name, icon, type } = parsedBody.data
+
+    // const existCategoryName = await prisma.category.findMany({
+    //   where: {
+    //     name,
+    //     userId: userDb.id,
+    //     type
+    //   },
+    // })
+  
+    // if (existCategoryName.length > 0) {
+    //   throw new Error('Already exists category with same name...')
+    // }
+    
+    return await prisma.category.create({
+      data: {
+        userId: userDb.id,
+        name,
+        icon,
+        type,
+      }
+    })
+  }
 }
 
 export async function DeleteCategory(form: DeleteCategorySchemaType) {
@@ -61,13 +67,22 @@ export async function DeleteCategory(form: DeleteCategorySchemaType) {
     redirect('/sign-in')
   }
 
-  return await prisma.category.delete({
+  // VERIFICAR SE O USUARIO EXISTE NO BD
+  const userDb = await prisma.user.findFirst({
     where: {
-      name_userId_type: {
-        userId: user.id,
-        name: parsedBody.data.name,
-        type: parsedBody.data.type,
-      },
+      clerkUserId: user.id,
     },
   })
+
+  if(userDb) {
+    return await prisma.category.delete({
+      where: {
+        name_userId_type: {
+          userId: userDb.id,
+          name: parsedBody.data.name,
+          type: parsedBody.data.type,
+        },
+      },
+    })
+  }
 }

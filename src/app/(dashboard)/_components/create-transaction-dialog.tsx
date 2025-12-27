@@ -53,6 +53,7 @@ import { CreateTransaction } from '../transactions/_actions/transactions/transac
 import { toast } from 'sonner'
 import { DateToUTCDate } from '@/lib/helpers'
 import MoneyInput from '@/components/money-input'
+import { useRouter } from 'next/navigation'
 
 interface CreateTransactionsDialogProps {
   trigger: React.ReactNode
@@ -65,6 +66,7 @@ function CreateTransactionDialog({
   trigger,
   type,
 }: CreateTransactionsDialogProps) {
+  const router = useRouter()
   const [open, setOpen] = useState<boolean>(false)
 
   const form = useForm<CreateTransactionSchemaType>({
@@ -88,7 +90,7 @@ function CreateTransactionDialog({
     mutationFn: async (values: CreateTransactionSchemaType) => {
       return await CreateTransaction(values)
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success('Transação criada com sucesso! 🎉', {
         id: 'create-transaction',
       })
@@ -101,11 +103,19 @@ function CreateTransactionDialog({
         type,
       })
 
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ['overview'],
+        exact: false,
       })
 
-      setOpen((prev) => !prev)
+      router.refresh()
+
+      setOpen(false)
+    },
+    onError: () => {
+      toast.error('Aconteceu algo de errado', {
+        id: 'create-transaction',
+      })
     },
   })
 
@@ -171,11 +181,6 @@ function CreateTransactionDialog({
                       placeholder="Valor"
                       {...field}
                     />
-                    {/* <Input
-                      defaultValue={''}
-                      type="number"
-                      {...field}
-                    /> */}
                   </FormControl>
                   <FormDescription>
                     Valor total da transação (requerido)

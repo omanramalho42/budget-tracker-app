@@ -63,19 +63,25 @@ type TransactionHistoryRow = GetTransactionHistoryResponseType[0]
 
 export const columns: ColumnDef<TransactionHistoryRow>[] = [
   {
-    accessorKey: 'category',
+    accessorKey: 'category.id',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Categoria" />
     ),
     filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
+      return value.includes(row.original.category?.id)
     },
-    cell: ({ row }) => (
-      <div className="flex gap-2 capitalize">
-        {row.original.categoryIcon}
-        <div className="capitalize">{row.original.category}</div>
-      </div>
-    ),
+    cell: ({ row }) => {
+      const category = row.original.category
+
+      if (!category) return null
+
+      return (
+        <div className="flex gap-2 capitalize">
+          <span>{category.icon}</span>
+          <span className="capitalize">{category.name}</span>
+        </div>
+      )
+    },
   },
   {
     accessorKey: 'description',
@@ -185,16 +191,16 @@ function TransactionTable({ from, to }: TransactionTableProps) {
   })
 
   const categoriesOptions = useMemo(() => {
-    const categoriesMap = new Map()
+    const categoriesMap = new Map<string, { value: string; label: string }>()
+
     history.data?.forEach((transaction) => {
-      categoriesMap.set(transaction.category, {
-        value: transaction.category,
-        label: `${transaction.categoryIcon} ${transaction.category}`,
+      categoriesMap.set(transaction.categoryId, {
+        value: transaction.categoryId,
+        label: `${transaction.categoryIcon}`,
       })
     })
-    const uniqueCategories = new Set(categoriesMap.values())
 
-    return Array.from(uniqueCategories)
+    return Array.from(categoriesMap.values())
   }, [history.data])
 
   return (
@@ -221,26 +227,28 @@ function TransactionTable({ from, to }: TransactionTableProps) {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant={'outline'}
-            size={'sm'}
-            className="ml-auto h-8 lg:flex"
-            onClick={() => {
-              const data = table.getFilteredRowModel().rows.map((row) => ({
-                category: row.original.category,
-                categoryIcon: row.original.categoryIcon,
-                description: row.original.description,
-                type: row.original.type,
-                amount: row.original.amount,
-                formattedAmount: row.original.formattedAmount,
-                date: row.original.date,
-              }))
-              handleExportCsv(data)
-            }}
-          >
-            <DownloadIcon className="mr-2 h-2 w-2" />
-            Exportar csv
-          </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="ml-auto h-8 lg:flex"
+          onClick={() => {
+            const data = table.getFilteredRowModel().rows.map((row) => ({
+              categoryId: row.original.categoryId,
+              categoryIcon: row.original.categoryIcon,
+              description: row.original.description,
+              type: row.original.type,
+              amount: row.original.amount,
+              formattedAmount: row.original.formattedAmount,
+              date: row.original.date,
+            }))
+
+            handleExportCsv(data)
+          }}
+        >
+          <DownloadIcon className="mr-2 h-2 w-2" />
+          Exportar csv
+        </Button>
+
           <DataTableViewOptions table={table} />
         </div>
       </div>

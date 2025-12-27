@@ -6,74 +6,84 @@ import { currentUser } from '@clerk/nextjs/server'
 
 import { prisma } from '@/lib/prisma'
 
-// import { DeleteTransactionSchemaType, DeleteTransactionSchema } from "@/schema/transaction"
-
 export async function DeleteTransaction(id: string) {
   const user = await currentUser()
   if (!user) {
     redirect('/sign-in')
   }
-
-  const transaction = await prisma.transaction.findUnique({
+  
+  // VERIFICAR SE O USUARIO EXISTE NO BD
+  const userDb = await prisma.user.findFirst({
     where: {
-      userId: user.id,
-      id,
+      clerkUserId: user.id,
     },
   })
 
-  if (!transaction) throw new Error('Bad request')
-
-  await prisma.$transaction([
-    prisma.transaction.delete({
+  if(userDb) {
+    const transaction = await prisma.transaction.findUnique({
       where: {
-        userId: user.id,
+        userId: userDb.id,
         id,
       },
-    }),
+      include: {
+        category: true
+      }
+    })
+  
+    if (!transaction) throw new Error('Bad request');
 
-    prisma.monthHistory.update({
-      where: {
-        day_month_year_userId: {
-          userId: user.id,
-          day: transaction.date.getUTCDate(),
-          month: transaction.date.getUTCMonth(),
-          year: transaction.date.getUTCFullYear(),
+    await prisma.$transaction([
+      prisma.transaction.delete({
+        where: {
+          userId: userDb.id,
+          id,
         },
-      },
-      data: {
-        ...(transaction.type === 'expanse' && {
-          expanse: {
-            decrement: transaction.amount,
+      }),
+  
+      prisma.monthHistory.update({
+        where: {
+          day_month_year_userId: {
+            userId: userDb.id,
+            day: transaction.date.getUTCDate(),
+            month: transaction.date.getUTCMonth(),
+            year: transaction.date.getUTCFullYear(),
           },
-        }),
-        ...(transaction.type === 'income' && {
-          income: {
-            decrement: transaction.amount,
-          },
-        }),
-      },
-    }),
-
-    prisma.yearHistory.update({
-      where: {
-        month_year_userId: {
-          userId: user.id,
-          month: transaction.date.getUTCMonth(),
-          year: transaction.date.getUTCFullYear(),
         },
-      },
-      data: {
-        ...(transaction.type === 'expanse' && {
-          expanse: {
-            decrement: transaction.amount,
+        data: {
+          ...(transaction.type === 'expanse' && {
+            expanse: {
+              decrement: transaction.amount,
+            },
+          }),
+          ...(transaction.type === 'income' && {
+            income: {
+              decrement: transaction.amount,
+            },
+          }),
+        },
+      }),
+  
+      prisma.yearHistory.update({
+        where: {
+          month_year_userId: {
+            userId: userDb.id,
+            month: transaction.date.getUTCMonth(),
+            year: transaction.date.getUTCFullYear(),
           },
-        }),
-        ...(transaction.type === 'income' && {
-          income: {
-            decrement: transaction.amount,
-          },
-        }),
-      },
-    }),
-  ])
+        },
+        data: {
+          ...(transaction.type === 'expanse' && {
+            expanse: {
+              decrement: transaction.amount,
+            },
+          }),
+          ...(transaction.type === 'income' && {
+            income: {
+              decrement: transaction.amount,
+            },
+          }),
+        },
+      }),
+    ])
+  }
 }

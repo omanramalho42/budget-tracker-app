@@ -7,29 +7,38 @@ export async function GET(request: Request) {
   const user = await currentUser()
 
   if (!user) {
-    redirect('/sign-in')
+    redirect('/sign-in?redirect=stats-categories')
   }
-
-  const { searchParams } = new URL(request.url)
-  const from = searchParams.get('from')
-  const to = searchParams.get('to')
-
-  const queryParams = OverviewQuerySchema.safeParse({
-    from,
-    to,
+  
+  // VERIFICAR SE O USUARIO EXISTE NO BD
+  const userDb = await prisma.user.findFirst({
+    where: {
+      clerkUserId: user.id,
+    },
   })
 
-  if (!queryParams.success) {
-    throw new Error(queryParams.error.message)
+  if(userDb) {
+    const { searchParams } = new URL(request.url)
+    const from = searchParams.get('from')
+    const to = searchParams.get('to')
+  
+    const queryParams = OverviewQuerySchema.safeParse({
+      from,
+      to,
+    })
+  
+    if (!queryParams.success) {
+      throw new Error(queryParams.error.message)
+    }
+  
+    const stats = await getCategoriesStats(
+      userDb.id,
+      queryParams.data.from,
+      queryParams.data.to,
+    )
+  
+    return Response.json(stats)
   }
-
-  const stats = await getCategoriesStats(
-    user.id,
-    queryParams.data.from,
-    queryParams.data.to,
-  )
-
-  return Response.json(stats)
 }
 
 export type GetCategoriesStatsResponseType = Awaited<
@@ -38,7 +47,7 @@ export type GetCategoriesStatsResponseType = Awaited<
 
 async function getCategoriesStats(userId: string, from: Date, to: Date) {
   const stats = await prisma.transaction.groupBy({
-    by: ['type', 'category', 'categoryIcon'],
+    by: ['type', 'categoryId', 'categoryIcon'],
     where: {
       userId,
       date: {
@@ -56,5 +65,27 @@ async function getCategoriesStats(userId: string, from: Date, to: Date) {
     },
   })
 
-  return stats
+  const categoryIds = stats.map((s) => s.categoryId)
+
+  const categories = await prisma.category.findMany({
+    where: {
+      id: { in: categoryIds },
+    },
+    select: {
+      id: true,
+      name: true,
+      icon: true,
+    },
+  })
+
+  const categoriesMap = new Map(
+    categories.map((c) => [c.id, c]),
+  )
+
+  const enrichedStats = stats.map((stat) => ({
+    ...stat,
+    category: categoriesMap.get(stat.categoryId),
+  }))
+
+  return enrichedStats
 }

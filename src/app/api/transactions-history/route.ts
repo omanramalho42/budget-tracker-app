@@ -13,28 +13,38 @@ export async function GET(request: Request) {
     redirect('/sign-in')
   }
 
-  const { searchParams } = new URL(request.url)
-  const from = searchParams.get('from')
-  const to = searchParams.get('to')
-
-  const queryParams = OverviewQuerySchema.safeParse({
-    from,
-    to,
+  // VERIFICAR SE O USUARIO EXISTE NO BD
+  const userDb = await prisma.user.findFirst({
+    where: {
+      clerkUserId: user.id,
+    },
   })
 
-  if (!queryParams.success) {
-    return Response.json(queryParams.error, {
-      status: 400,
+  if (userDb) {
+    const { searchParams } = new URL(request.url)
+    const from = searchParams.get('from')
+    const to = searchParams.get('to')
+  
+    const queryParams = OverviewQuerySchema.safeParse({
+      from,
+      to,
     })
+  
+    if (!queryParams.success) {
+      return Response.json(queryParams.error, {
+        status: 400,
+      })
+    }
+  
+    const transaction = await getTransactionHistory(
+      userDb.id,
+      queryParams.data.from,
+      queryParams.data.to,
+    )
+  
+    return Response.json(transaction)
   }
 
-  const transaction = await getTransactionHistory(
-    user.id,
-    queryParams.data.from,
-    queryParams.data.to,
-  )
-
-  return Response.json(transaction)
 }
 
 export type GetTransactionHistoryResponseType = Awaited<
@@ -63,6 +73,9 @@ async function getTransactionHistory(userId: string, from: Date, to: Date) {
     orderBy: {
       date: 'desc',
     },
+    include: {
+      category: true
+    }
   })
 
   return transactions.map((transaction) => ({
