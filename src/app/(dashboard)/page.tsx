@@ -12,25 +12,26 @@ import History from './_components/history'
 import { prisma } from '@/lib/prisma'
 
 export default async function page() {
+  // NGROK DER DEFEITO JA ERA PARA APLICAÇÃO EVITAR ISSO
   const user = await currentUser()
   
   if (!user) {
     redirect('/sign-in')
   }
 
-  const userOnDb = await prisma.user.findFirst({
+  const userDb = await prisma.user.findFirst({
     where: {
       clerkUserId: user.id
     },
   })
 
-  if (!userOnDb) {
+  if (!userDb) {
     redirect('/sign-in')
   }
 
   const userSettings = await prisma.userSettings.findUnique({
     where: {
-      userId: userOnDb.id,
+      userId: userDb.id,
     },
   })
 
@@ -42,7 +43,7 @@ export default async function page() {
     <div className="h-full border-2 py-6">
       <div className="mx-6 border-b bg-card">
         <div className="flex flex-wrap items-center justify-between gap-6 py-8">
-          <p className="text-3xl font-bold">Olá, {user.firstName}! 👋</p>
+          <p className="text-3xl font-bold">Olá, {userDb.firstName}! 👋</p>
           <div className="flex items-center gap-3">
             <CreateTransactionDialog
               trigger={

@@ -13,16 +13,16 @@ export async function DeleteTransaction(id: string) {
   }
   
   // VERIFICAR SE O USUARIO EXISTE NO BD
-  const existUserOnDb = await prisma.user.findFirst({
+  const userDb = await prisma.user.findFirst({
     where: {
       clerkUserId: user.id,
     },
   })
 
-  if(existUserOnDb) {
+  if(userDb) {
     const transaction = await prisma.transaction.findUnique({
       where: {
-        userId: existUserOnDb.id,
+        userId: userDb.id,
         id,
       },
       include: {
@@ -35,7 +35,7 @@ export async function DeleteTransaction(id: string) {
     await prisma.$transaction([
       prisma.transaction.delete({
         where: {
-          userId: existUserOnDb.id,
+          userId: userDb.id,
           id,
         },
       }),
@@ -43,7 +43,7 @@ export async function DeleteTransaction(id: string) {
       prisma.monthHistory.update({
         where: {
           day_month_year_userId: {
-            userId: existUserOnDb.id,
+            userId: userDb.id,
             day: transaction.date.getUTCDate(),
             month: transaction.date.getUTCMonth(),
             year: transaction.date.getUTCFullYear(),
@@ -66,7 +66,7 @@ export async function DeleteTransaction(id: string) {
       prisma.yearHistory.update({
         where: {
           month_year_userId: {
-            userId: existUserOnDb.id,
+            userId: userDb.id,
             month: transaction.date.getUTCMonth(),
             year: transaction.date.getUTCFullYear(),
           },
@@ -86,6 +86,4 @@ export async function DeleteTransaction(id: string) {
       }),
     ])
   }
-
-
 }

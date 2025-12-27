@@ -90,10 +90,10 @@ function CreateCategoryDialog({
       onSuccessCallback(data)
 
       await queryClient.invalidateQueries({
-        queryKey: ['categories'],
+        queryKey: ['categories']
       })
 
-      setOpen((prev) => !prev)
+      setOpen(false)
     },
     onError: (error) => {
       toast.error('Algo aconteceu de errado...', {

@@ -14,13 +14,13 @@ export async function GET(request: Request) {
   }
 
   // VERIFICAR SE O USUARIO EXISTE NO BD
-  const existUserOnDb = await prisma.user.findFirst({
+  const userDb = await prisma.user.findFirst({
     where: {
       clerkUserId: user.id,
     },
   })
 
-  if (existUserOnDb) {
+  if (userDb) {
     const { searchParams } = new URL(request.url)
     const from = searchParams.get('from')
     const to = searchParams.get('to')
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
     }
   
     const transaction = await getTransactionHistory(
-      existUserOnDb.id,
+      userDb.id,
       queryParams.data.from,
       queryParams.data.to,
     )

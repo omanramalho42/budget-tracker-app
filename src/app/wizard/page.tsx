@@ -15,8 +15,9 @@ import React from 'react'
 
 async function page() {
   const user = await currentUser()
+  
   if (!user) {
-    redirect('/sign-in')
+    redirect('/sign-in?redirect=wizard')
   }
 
   return (

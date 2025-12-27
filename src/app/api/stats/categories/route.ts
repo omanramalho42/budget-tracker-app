@@ -7,17 +7,17 @@ export async function GET(request: Request) {
   const user = await currentUser()
 
   if (!user) {
-    redirect('/sign-in')
+    redirect('/sign-in?redirect=stats-categories')
   }
   
   // VERIFICAR SE O USUARIO EXISTE NO BD
-  const existUserOnDb = await prisma.user.findFirst({
+  const userDb = await prisma.user.findFirst({
     where: {
       clerkUserId: user.id,
     },
   })
 
-  if(existUserOnDb) {
+  if(userDb) {
     const { searchParams } = new URL(request.url)
     const from = searchParams.get('from')
     const to = searchParams.get('to')
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     }
   
     const stats = await getCategoriesStats(
-      existUserOnDb.id,
+      userDb.id,
       queryParams.data.from,
       queryParams.data.to,
     )

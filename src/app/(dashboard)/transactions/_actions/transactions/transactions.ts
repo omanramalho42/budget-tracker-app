@@ -22,20 +22,20 @@ export async function CreateTransaction(form: CreateTransactionSchemaType) {
   }
 
   // VERIFICAR SE O USUARIO EXISTE NO BD
-  const existUserOnDb = await prisma.user.findFirst({
+  const userDb = await prisma.user.findFirst({
     where: {
       clerkUserId: user.id,
     },
   })
 
   // FIND EXISTS FOLLOWING CATEGORY NAME
-  if(existUserOnDb) {
+  if(userDb) {
     const { amount, category, date, type, description } = parsedBody.data
   
 
     const categoryRow = await prisma.category.findFirst({
       where: {
-        userId: existUserOnDb.id,
+        userId: userDb.id,
         name: category,
         type: type,
       },
@@ -45,7 +45,7 @@ export async function CreateTransaction(form: CreateTransactionSchemaType) {
     await prisma.$transaction([
       prisma.transaction.create({
         data: {
-          userId: existUserOnDb.id,
+          userId: userDb.id,
           amount,
           date,
           description: description || '',
@@ -60,14 +60,14 @@ export async function CreateTransaction(form: CreateTransactionSchemaType) {
       prisma.monthHistory.upsert({
         where: {
           day_month_year_userId: {
-            userId: existUserOnDb.id,
+            userId: userDb.id,
             day: date.getUTCDate(),
             month: date.getUTCMonth(),
             year: date.getUTCFullYear(),
           },
         },
         create: {
-          userId: existUserOnDb.id,
+          userId: userDb.id,
           day: date.getUTCDate(),
           month: date.getUTCMonth(),
           year: date.getUTCFullYear(),
@@ -87,13 +87,13 @@ export async function CreateTransaction(form: CreateTransactionSchemaType) {
       prisma.yearHistory.upsert({
         where: {
           month_year_userId: {
-            userId: existUserOnDb.id,
+            userId: userDb.id,
             month: date.getUTCMonth(),
             year: date.getUTCFullYear(),
           },
         },
         create: {
-          userId: existUserOnDb.id,
+          userId: userDb.id,
           month: date.getUTCMonth(),
           year: date.getUTCFullYear(),
           expanse: type === 'expanse' ? amount : 0,

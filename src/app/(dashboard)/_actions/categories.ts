@@ -24,38 +24,34 @@ export async function CreateCategory(form: CreateCategoriesSchemaType) {
   }
 
   // VERIFICAR SE O USUARIO EXISTE NO BD
-  const existUserOnDb = await prisma.user.findFirst({
+  const userDb = await prisma.user.findFirst({
     where: {
       clerkUserId: user.id,
     },
   })
 
-  const { name, icon, type } = parsedBody.data
-
-  if (existUserOnDb) {
-    const existCategoryName = await prisma.category.findMany({
-      where: {
-        name,
-        userId: existUserOnDb.id,
-        type
-      },
-    })
   
-    if (existCategoryName.length > 0) {
-      throw new Error('Already exists category with same name...')
-    }
+  if (userDb) {
+    const { name, icon, type } = parsedBody.data
+
+    // const existCategoryName = await prisma.category.findMany({
+    //   where: {
+    //     name,
+    //     userId: userDb.id,
+    //     type
+    //   },
+    // })
+  
+    // if (existCategoryName.length > 0) {
+    //   throw new Error('Already exists category with same name...')
+    // }
     
     return await prisma.category.create({
       data: {
-        userId: existUserOnDb.id,
+        userId: userDb.id,
         name,
         icon,
         type,
-      } as {
-        userId: string;
-        name: string;
-        icon: string;
-        type: "income" | "expanse";
       }
     })
   }
@@ -72,23 +68,21 @@ export async function DeleteCategory(form: DeleteCategorySchemaType) {
   }
 
   // VERIFICAR SE O USUARIO EXISTE NO BD
-  const existUserOnDb = await prisma.user.findFirst({
+  const userDb = await prisma.user.findFirst({
     where: {
       clerkUserId: user.id,
     },
   })
 
-  if(existUserOnDb) {
+  if(userDb) {
     return await prisma.category.delete({
       where: {
         name_userId_type: {
-          userId: existUserOnDb.id,
+          userId: userDb.id,
           name: parsedBody.data.name,
           type: parsedBody.data.type,
         },
       },
     })
-  } else {
-    redirect('/sign-in')
   }
 }

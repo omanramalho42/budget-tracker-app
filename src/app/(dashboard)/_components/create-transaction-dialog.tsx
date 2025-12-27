@@ -91,28 +91,27 @@ function CreateTransactionDialog({
       return await CreateTransaction(values)
     },
     onSuccess: async () => {
-  toast.success('Transação criada com sucesso! 🎉', {
-    id: 'create-transaction',
-  })
+      toast.success('Transação criada com sucesso! 🎉', {
+        id: 'create-transaction',
+      })
 
-  form.reset({
-    amount: 0,
-    category: undefined,
-    date: new Date(),
-    description: '',
-    type,
-  })
+      form.reset({
+        amount: 0,
+        category: undefined,
+        date: new Date(),
+        description: '',
+        type,
+      })
 
-  await queryClient.invalidateQueries({
-    queryKey: ['overview'],
-    exact: false,
-  })
+      await queryClient.invalidateQueries({
+        queryKey: ['overview'],
+        exact: false,
+      })
 
-  router.refresh()
+      router.refresh()
 
-  setOpen(false)
-},
-
+      setOpen(false)
+    },
     onError: () => {
       toast.error('Aconteceu algo de errado', {
         id: 'create-transaction',

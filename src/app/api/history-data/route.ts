@@ -15,17 +15,17 @@ export async function GET(request: Request) {
   const user = await currentUser()
 
   if (!user) {
-    redirect('/sign-in')
+    redirect('/sign-in?redirect=history-data')
   }
 
   // VERIFICAR SE O USUARIO EXISTE NO BD
-  const existUserOnDb = await prisma.user.findFirst({
+  const userDb = await prisma.user.findFirst({
     where: {
       clerkUserId: user.id,
     },
   })
 
-  if(existUserOnDb) {
+  if(userDb) {
     const { searchParams } = new URL(request.url)
     const timeframe = searchParams.get('timeframe')
     const year = searchParams.get('year')
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
       })
     }
   
-    const data = await getHistoryData(existUserOnDb.id, queryParams.data.timeframe, {
+    const data = await getHistoryData(userDb.id, queryParams.data.timeframe, {
       month: queryParams.data.month,
       year: queryParams.data.year,
     })

@@ -4,7 +4,6 @@ import { revalidatePath } from 'next/cache'
 
 import { redirect } from 'next/navigation'
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(request: Request) {
   const user = await currentUser()
   
@@ -14,23 +13,24 @@ export async function GET(request: Request) {
   }
 
   // VERIFICAR SE O USUARIO EXISTE NO BD
-  const existUserOnDb = await prisma.user.findFirst({
+  const userDb = await prisma.user.findFirst({
     where: {
       clerkUserId: user.id,
     },
   })
 
-  if(existUserOnDb) {
+  // USUARIO EXISTE NO BANCO DE DADOS
+  if(userDb) {
     let userSettings = await prisma.userSettings.findUnique({
       where: {
-        userId: existUserOnDb?.id,
+        userId: userDb.id,
       },
     })
 
     if (!userSettings) {
       userSettings = await prisma.userSettings.create({
         data: {
-          userId: existUserOnDb?.id,
+          userId: userDb.id,
           currency: 'USD',
         },
       })
@@ -39,4 +39,6 @@ export async function GET(request: Request) {
     revalidatePath('/')
     return Response.json(userSettings)
   }
+
+  throw new Error("error find user on databse")
 }
