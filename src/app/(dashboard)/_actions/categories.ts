@@ -34,17 +34,17 @@ export async function CreateCategory(form: CreateCategoriesSchemaType) {
   if (userDb) {
     const { name, icon, type } = parsedBody.data
 
-    // const existCategoryName = await prisma.category.findMany({
-    //   where: {
-    //     name,
-    //     userId: userDb.id,
-    //     type
-    //   },
-    // })
+    const existCategoryName = await prisma.category.findMany({
+      where: {
+        name,
+        userId: userDb.id,
+        type
+      },
+    })
   
-    // if (existCategoryName.length > 0) {
-    //   throw new Error('Already exists category with same name...')
-    // }
+    if (existCategoryName.length > 0) {
+      throw new Error('Already exists category with same name...')
+    }
     
     return await prisma.category.create({
       data: {

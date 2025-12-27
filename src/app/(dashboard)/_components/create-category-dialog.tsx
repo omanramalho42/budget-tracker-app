@@ -98,6 +98,7 @@ function CreateCategoryDialog({
     onError: (error) => {
       toast.error('Algo aconteceu de errado...', {
         id: 'create-category',
+        description: error.message
       })
     },
   })
