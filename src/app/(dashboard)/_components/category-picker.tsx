@@ -69,7 +69,7 @@ export default function CategoryPicker({
           variant={'outline'}
           role="combobox"
           aria-expanded={open}
-          className="w-[260px] justify-between"
+          className="w-full justify-between"
         >
           {selectedCategory ? (
             <CategoryRow category={selectedCategory} />

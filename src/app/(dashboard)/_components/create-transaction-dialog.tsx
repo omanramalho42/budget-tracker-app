@@ -151,7 +151,10 @@ function CreateTransactionDialog({
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+          <form 
+            className="space-y-4"
+            onSubmit={form.handleSubmit(onSubmit)}
+          >
             <FormField
               control={form.control}
               name={'description'}
@@ -159,7 +162,11 @@ function CreateTransactionDialog({
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Input defaultValue={''} type="text" {...field} />
+                    <Input
+                      defaultValue={''}
+                      type="text"
+                      {...field}
+                    />
                   </FormControl>
                   <FormDescription>
                     Descrição da transação (opcional)
@@ -173,11 +180,11 @@ function CreateTransactionDialog({
               name={'amount'}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Total</FormLabel>
+                  {/* <FormLabel>Total</FormLabel> */}
                   <FormControl>
                     <MoneyInput
                       form={form}
-                      label="Valor"
+                      label="Valor total"
                       placeholder="Valor"
                       {...field}
                     />
@@ -188,14 +195,14 @@ function CreateTransactionDialog({
                 </FormItem>
               )}
             />
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-col gap-4 sm:flex-row w-full">
               <FormField
                 control={form.control}
                 name={'category'}
                 render={() => (
-                  <FormItem className="flex flex-col">
+                  <FormItem className="flex flex-col w-full">
                     <FormLabel className="mr-5">Categoria</FormLabel>
-                    <FormControl>
+                    <FormControl className='w-full'>
                       <CategoryPicker
                         type={type}
                         onChange={handleCategoryChange}
@@ -220,7 +227,7 @@ function CreateTransactionDialog({
                           <Button
                             variant={'outline'}
                             className={cn(
-                              'w-[200px] pl-3 text-left font-normal',
+                              'pl-3 text-left font-normal',
                               !field.value && 'text-muted-foreground',
                             )}
                           >
@@ -253,7 +260,7 @@ function CreateTransactionDialog({
             </div>
           </form>
         </Form>
-        <DialogFooter>
+        <DialogFooter className='gap-2 sm:gap-0'>
           <DialogClose asChild>
             <Button
               type="button"
