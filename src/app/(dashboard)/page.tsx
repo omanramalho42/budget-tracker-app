@@ -12,7 +12,6 @@ import History from './_components/history'
 import { prisma } from '@/lib/prisma'
 
 export default async function page() {
-  // NGROK DER DEFEITO JA ERA PARA APLICAÇÃO EVITAR ISSO
   const user = await currentUser()
   
   if (!user) {

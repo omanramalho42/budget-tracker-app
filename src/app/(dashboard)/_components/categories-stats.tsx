@@ -92,7 +92,7 @@ function CategoriesCard({
       </div>
 
       {filteredData.length > 0 && (
-        <ScrollArea className="h-60 w-full px-4">
+        <ScrollArea className="h-52 w-full px-4">
           <div className="flex w-full flex-col gap-4 p-4">
             {filteredData.map((item) => {
               const amount = item._sum.amount || 0

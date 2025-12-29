@@ -73,6 +73,7 @@ function CreateCategoryDialog({
   const queryClient = useQueryClient()
 
   const { mutate, isPending } = useMutation({
+    // @ts-ignore
     mutationFn: async (values: CreateCategoriesSchemaType) => {
       return await CreateCategory(values)
     },
@@ -104,7 +105,6 @@ function CreateCategoryDialog({
 
   const onSubmit = useCallback(
     (values: CreateCategoriesSchemaType) => {
-      
       toast.loading('Criando categoria...', {
         id: 'create-category',
       })
@@ -221,7 +221,7 @@ function CreateCategoryDialog({
             />
           </form>
         </Form>
-        <DialogFooter>
+        <DialogFooter className='gap-2 sm:gap-0'>
           <DialogClose asChild>
             <Button
               type="button"

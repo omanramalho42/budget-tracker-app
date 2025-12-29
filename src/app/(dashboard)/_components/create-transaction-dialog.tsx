@@ -48,7 +48,7 @@ import { Calendar } from '@/components/ui/calendar'
 import CategoryPicker from './category-picker'
 
 import { CalendarIcon, Loader2 } from 'lucide-react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { QueryClient, useMutation, useQueryClient } from '@tanstack/react-query'
 import { CreateTransaction } from '../transactions/_actions/transactions/transactions'
 import { toast } from 'sonner'
 import { DateToUTCDate } from '@/lib/helpers'
@@ -77,14 +77,14 @@ function CreateTransactionDialog({
     },
   })
 
+  const queryClient = useQueryClient()
+
   const handleCategoryChange = useCallback(
     (value: string) => {
       form.setValue('category', value)
     },
     [form],
   )
-
-  const queryClient = useQueryClient()
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: CreateTransactionSchemaType) => {
@@ -103,14 +103,14 @@ function CreateTransactionDialog({
         type,
       })
 
-      await queryClient.invalidateQueries({
-        queryKey: ['overview'],
-        exact: false,
+      // Invalidate and refetch
+      await queryClient.invalidateQueries({ 
+        queryKey: [
+          'overview',
+        ],
       })
 
-      router.refresh()
-
-      setOpen(false)
+      setOpen((prev) => !prev)
     },
     onError: () => {
       toast.error('Aconteceu algo de errado', {
