@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { currentUser } from '@clerk/nextjs/server'
@@ -10,6 +11,7 @@ import {
   CreateTransactionSchemaType,
   CreateTransactionSchema,
 } from '@/schema/transaction'
+
 
 export async function CreateTransaction(form: CreateTransactionSchemaType) {
   const parsedBody = CreateTransactionSchema.safeParse(form)
@@ -31,7 +33,6 @@ export async function CreateTransaction(form: CreateTransactionSchemaType) {
   // FIND EXISTS FOLLOWING CATEGORY NAME
   if(userDb) {
     const { amount, category, date, type, description } = parsedBody.data
-  
 
     const categoryRow = await prisma.category.findFirst({
       where: {
@@ -42,7 +43,7 @@ export async function CreateTransaction(form: CreateTransactionSchemaType) {
     })
     if (!categoryRow) throw new Error('Category not found')
 
-    await prisma.$transaction([
+    return await prisma.$transaction([
       prisma.transaction.create({
         data: {
           userId: userDb.id,
@@ -109,5 +110,6 @@ export async function CreateTransaction(form: CreateTransactionSchemaType) {
         },
       }),
     ])
+
   }
 }

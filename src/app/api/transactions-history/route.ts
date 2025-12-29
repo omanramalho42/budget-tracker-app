@@ -5,6 +5,7 @@ import { currentUser } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { OverviewQuerySchema } from '../../../schema/overview'
 import { GetFormatterForCurrency } from '@/lib/helpers'
+import { endOfDay, startOfDay } from 'date-fns'
 
 export async function GET(request: Request) {
   const user = await currentUser()
@@ -66,8 +67,8 @@ async function getTransactionHistory(userId: string, from: Date, to: Date) {
     where: {
       userId,
       date: {
-        gte: from,
-        lte: to,
+        gte: startOfDay(from),
+        lte: endOfDay(to),
       },
     },
     orderBy: {

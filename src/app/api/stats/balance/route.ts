@@ -2,6 +2,7 @@ import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { OverviewQuerySchema } from '@/schema/overview'
 import { prisma } from '@/lib/prisma'
+import { endOfDay, startOfDay } from 'date-fns'
 
 export async function GET(request: Request) {
   const user = await currentUser()
@@ -54,8 +55,8 @@ async function getBalanceStats(userId: string, from: Date, to: Date) {
     where: {
       userId,
       date: {
-        gte: from,
-        lte: to,
+        gte: startOfDay(from),
+        lte: endOfDay(to),
       },
     },
     _sum: {

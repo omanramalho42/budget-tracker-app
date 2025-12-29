@@ -69,7 +69,7 @@ export default function CategoryPicker({
           variant={'outline'}
           role="combobox"
           aria-expanded={open}
-          className="w-[260px] justify-between"
+          className="w-full justify-between"
         >
           {selectedCategory ? (
             <CategoryRow category={selectedCategory} />
@@ -90,8 +90,8 @@ export default function CategoryPicker({
             type={type}
             onSuccessCallback={onSuccessCallback}
           />
-          <CommandEmpty>
-            <p>Categoria não encontrada</p>
+          <CommandEmpty className='p-2'>
+            <p className='text-sm'>Categoria não encontrada</p>
             <p className="text-xs text-muted-foreground">
               Criar uma nova categoria
             </p>

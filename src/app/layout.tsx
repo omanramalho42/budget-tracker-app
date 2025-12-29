@@ -39,7 +39,7 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          <Toaster richColors position="bottom-right" />
+          <Toaster theme='dark' richColors position="bottom-right" />
           <QueryClientProvider>
             <ThemeProvider
               attribute="class"
