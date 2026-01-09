@@ -33,19 +33,22 @@ function page() {
   return (
     <>
       <div className="border-b bg-card">
-        <div className="mx-6 flex flex-wrap items-center justify-between gap-6 py-8">
+        <div className="mx-4 flex flex-col gap-2 py-6 sm:mx-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-3xl font-bold">Gerenciar</p>
-            <p className="text-muted-foreground">
-              Gerêncie as configurações e as categorias da sua conta
+            <p className="text-2xl font-bold sm:text-3xl">Gerenciar</p>
+            <p className="text-sm text-muted-foreground sm:text-base">
+              Gerencie as configurações e categorias da sua conta
             </p>
           </div>
         </div>
       </div>
-      <div className="mx-8 flex flex-col gap-4 p-4">
+
+      <div className="mx-4 flex flex-col gap-4 p-4 sm:mx-8">
         <Card>
           <CardHeader>
-            <CardTitle>Moeda</CardTitle>
+            <CardTitle>
+              Moeda
+            </CardTitle>
             <CardDescription>
               Escolhe a sua moeda padrão para transações
             </CardDescription>
@@ -76,7 +79,7 @@ function CategoryList({ type }: { type: TransactionType }) {
     <SkeletonWrapper isLoading={categoriesQuery.isFetching} fullWidth={false}>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between gap-2">
+          <CardTitle className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
               {type === 'expanse' ? (
                 <TrendingDown className="h-12 w-12 items-center rounded-lg bg-rose-400/10 p-2 text-rose-500" />
@@ -95,7 +98,7 @@ function CategoryList({ type }: { type: TransactionType }) {
               type={type}
               onSuccessCallback={() => categoriesQuery.refetch()}
               trigger={
-                <Button className="gap-2 text-sm">
+                <Button className="w-full gap-2 text-sm sm:w-auto">
                   <PlusSquare className="h-4 w-4" />
                   Criar categoria
                 </Button>
@@ -125,7 +128,7 @@ function CategoryList({ type }: { type: TransactionType }) {
           </div>
         )}
         {dataAvaliable && (
-          <div className="grid grid-flow-row gap-2 p-2 sm:grid-flow-row sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 p-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {categoriesQuery.data.map((category: Category) => (
               <CategoryCard category={category} key={category.name} />
             ))}
@@ -140,8 +143,8 @@ function CategoryCard({ category }: { category: Category }) {
   return (
     <div className="flex border-separate flex-col justify-between rounded-md border shadow-md shadow-black/[0.1] dark:shadow-white/[0.1]">
       <div className="flex flex-col items-center gap-2 p-4">
-        <span className="text-3xl">{category.icon}</span>
-        <span>{category.name}</span>
+        <span className="text-4xl">{category.icon}</span>
+        <span className="text-sm font-medium">{category.name}</span>
       </div>
       <DeleteCategoryDialog
         category={category}

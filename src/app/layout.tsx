@@ -10,6 +10,7 @@ import './globals.css'
 import QueryClientProvider from '@/components/providers/query-client-provider'
 
 import { Toaster } from 'sonner'
+import { TooltipProvider } from '@/components/ui/tooltip'
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -47,7 +48,9 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              <main>{children}</main>
+              <TooltipProvider>
+                <main>{children}</main>
+              </TooltipProvider>
             </ThemeProvider>
           </QueryClientProvider>
         </body>

@@ -76,10 +76,15 @@ model Transaction {
 
   categoryIcon  String
 
-  userId      String
+  receiptUrl    String?
+  isRecurring   Boolean @default(false)
+  recurrenceInterval RECURRENCEINTERVAL?
+  paymentMethod     PAYMENTMETHOD?
+
+  userId        String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  categoryId  String
+  categoryId    String
   category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 }
 
@@ -110,3 +115,24 @@ model YearHistory {
 
   @@id([month, year, userId])
 }
+
+enum TYPES {
+  EXPANSE
+  INCOME
+}
+
+enum RECURRENCEINTERVAL {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum PAYMENTMETHOD {
+  CARD
+  BANK_TRANSFER
+  MOBILE_PAYMENT
+}
+
+// CLOUDNARY_SECRET_API_KEY
+// GOOGLE_SECRET_API_KEY

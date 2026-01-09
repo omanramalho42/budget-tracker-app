@@ -146,12 +146,15 @@ export const columns: ColumnDef<TransactionHistoryRow>[] = [
   },
 ]
 
-const csvConfig = mkConfig({
-  fieldSeparator: '.',
-  decimalSeparator: '.',
-  useKeysAsHeaders: true,
-})
-
+type TransactionCsvRow = {
+  categoryId: string
+  categoryIcon: string
+  description: string
+  type: 'income' | 'expense'
+  amount: number
+  formattedAmount: string
+  date: string
+}
 function TransactionTable({ from, to }: TransactionTableProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
@@ -165,8 +168,20 @@ function TransactionTable({ from, to }: TransactionTableProps) {
       ).then((res) => res.json()),
   })
 
-  const handleExportCsv = (data: any[]) => {
-    const csv = generateCsv(csvConfig)(data)
+  const csvConfig = mkConfig({
+    fieldSeparator: ';',
+    decimalSeparator: ',',
+    useKeysAsHeaders: true,
+    useBom: true,
+    filename: `transacoes-${new Date()
+      .toISOString()
+      .slice(0, 10)}`,
+  })
+
+  const handleExportCsv = (rows: any[]) => {
+    if (!rows.length) return
+
+    const csv = generateCsv(csvConfig)(rows)
     download(csvConfig)(csv)
   }
 
@@ -241,6 +256,8 @@ function TransactionTable({ from, to }: TransactionTableProps) {
               formattedAmount: row.original.formattedAmount,
               date: row.original.date,
             }))
+
+            console.log(data, "data");
 
             handleExportCsv(data)
           }}
