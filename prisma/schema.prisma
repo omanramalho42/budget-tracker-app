@@ -20,7 +20,7 @@ model User {
   lastName  String?
   imageUrl  String?
 
-  clerkUserId String
+  clerkUserId String @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -31,8 +31,6 @@ model User {
 
   monthHistory MonthHistory[]
   yearHistory  YearHistory[]
-
-  @@unique([id, email, clerkUserId])
 }
 
 model UserSettings {
