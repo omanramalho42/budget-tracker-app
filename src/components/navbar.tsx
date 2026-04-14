@@ -132,7 +132,7 @@ function MobileNavbar() {
         </div>
         <div className="flex items-center gap-2">
           <ThemeSwitch />
-          <UserButton afterSignOutUrl="/sign-in" />
+          <UserButton fallback="/sign-in" />
         </div>
       </nav>
     </div>

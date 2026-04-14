@@ -2,6 +2,7 @@ import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+import { inngest } from '@/lib/inngest/client';
 
 export async function POST(req: Request) {
   console.log("passei aqui");
@@ -65,6 +66,17 @@ export async function POST(req: Request) {
           imageUrl: image_url,
         }
       });
+       await inngest.send({
+        name: 'app/user.created',
+        data: {
+          email: email_addresses[0].email_address,
+          name: first_name,
+          // country,
+          // investmentGoals,
+          // riskTolerance,
+          // preferredIndustry
+        }
+      })
       return new Response(JSON.stringify(newUser), {
         status: 201,
       })

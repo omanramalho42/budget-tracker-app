@@ -11,6 +11,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandEmpty
 } from '@/components/ui/command'
 import {
   Popover,
@@ -22,7 +23,6 @@ import { Button } from '@/components/ui/button'
 import CreateCategoryDialog from './create-category-dialog'
 
 import { TransactionType } from '@/lib/types'
-import { CommandEmpty } from 'cmdk'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 

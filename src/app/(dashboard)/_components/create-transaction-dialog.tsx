@@ -1,8 +1,6 @@
-// @typescript-eslint/no-unused-vars
-
 'use client'
 
-import React, { useCallback, useState } from 'react'
+import React, { Fragment, useCallback, useState, useRef } from 'react'
 
 import { format } from 'date-fns'
 
@@ -17,6 +15,12 @@ import {
   CreateTransactionSchemaType,
   CreateTransactionSchema,
 } from '@/schema/transaction'
+
+import { CreateTransaction } from '../transactions/_actions/transactions/transactions'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+
+import { toast } from 'sonner'
+import axios from 'axios'
 
 import {
   Dialog,
@@ -44,16 +48,22 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
-
-import CategoryPicker from './category-picker'
-
-import { CalendarIcon, Loader2 } from 'lucide-react'
-import { QueryClient, useMutation, useQueryClient } from '@tanstack/react-query'
-import { CreateTransaction } from '../transactions/_actions/transactions/transactions'
-import { toast } from 'sonner'
-import { DateToUTCDate } from '@/lib/helpers'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import MoneyInput from '@/components/money-input'
-import { useRouter } from 'next/navigation'
+import CategoryPicker from './category-picker'
+import FileUploader from './file-uploader'
+import TooltipHoverCard from './tooltips/tooltip-hover-card'
+
+import { DateToUTCDate } from '@/lib/helpers'
+
+import { CalendarIcon, Loader, Loader2 } from 'lucide-react'
 
 interface CreateTransactionsDialogProps {
   trigger: React.ReactNode
@@ -66,7 +76,10 @@ function CreateTransactionDialog({
   trigger,
   type,
 }: CreateTransactionsDialogProps) {
-  const router = useRouter()
+  const abortControllerRef =
+    useRef<AbortController | null>(null)
+
+  const [loading, setLoading] = useState<boolean>(false)
   const [open, setOpen] = useState<boolean>(false)
 
   const form = useForm<CreateTransactionSchemaType>({
@@ -74,6 +87,8 @@ function CreateTransactionDialog({
     defaultValues: {
       type,
       date: new Date(),
+      installments: 1,
+      receiptUrl: ""
     },
   })
 
@@ -101,6 +116,8 @@ function CreateTransactionDialog({
         date: new Date(),
         description: '',
         type,
+        installments: 1,
+        isRecurring: false
       })
 
       // Invalidate and refetch
@@ -124,7 +141,7 @@ function CreateTransactionDialog({
       toast.loading('Criando transação...', {
         id: 'create-transaction',
       })
-
+      console.log(values, "values")
       mutate({
         ...values,
         date: DateToUTCDate(values.date),
@@ -136,8 +153,8 @@ function CreateTransactionDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="w-[95vw] max-w-lg sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5">
           <DialogTitle>
             Criar uma nova transação de
             <span
@@ -150,11 +167,113 @@ function CreateTransactionDialog({
             </span>
           </DialogTitle>
         </DialogHeader>
+
         <Form {...form}>
           <form 
             className="space-y-4"
             onSubmit={form.handleSubmit(onSubmit)}
           >
+            <TooltipHoverCard>
+              <FormField
+                control={form.control}
+                name="receiptFiles"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ai receipt scan</FormLabel>
+                    <FormControl>
+                      <FileUploader
+                        files={field.value}
+                        onChange={(file) => {
+                          console.log(file, "file")
+                          field.onChange(file)
+                        }}
+                      />
+                    </FormControl>
+                    <FormDescription />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  type='button'
+                  disabled={!form.watch('receiptFiles') || loading}
+                  onClick={async (e) => {
+                    e.preventDefault()
+                    // if (abortControllerRef.current) return
+
+                    abortControllerRef.current = new AbortController()
+                    
+                    setLoading(true)
+                    let receiptUrl = ``
+
+                    const formData = new FormData()
+                    const files = Array.from(
+                      form.watch('receiptFiles') as FileList | File[]
+                    )
+
+                    files.forEach((file) => {
+                      formData.append('file', file)
+                    })
+                    
+                    const folderName = 'cloudinary-budget'
+                    formData.append("folderName", folderName)
+
+                    const { data: resData } = 
+                      await axios.post(`/api/upload`,
+                        formData,
+                        {
+                          signal: abortControllerRef.current.signal,
+                        }
+                      )
+                    
+                    if(resData.error) {
+                      alert("Error uploading file")
+                      return
+                    }
+                    console.log(resData, "receiptUrl")
+                    receiptUrl = resData
+                    form.setValue('receiptUrl', resData)
+
+                    setLoading(false)
+                    toast.success(
+                      "File uploaded sucessfully",
+                      { id: 'file-uploaded-sucess' }
+                    )
+                    form.reset({
+                      receiptFiles: []
+                    })
+
+                    return
+                  }}
+                >
+                  {loading ? 
+                    (<Loader 
+                        className='animate-spin'
+                      />
+                    ) : ('Criar +')
+                  }
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (abortControllerRef.current) {
+                      abortControllerRef.current.abort()
+                      abortControllerRef.current = null
+                    }
+
+                    setLoading(false)
+                    form.reset({
+                      receiptFiles: [],
+                    })
+                    setOpen(false)
+                  }}
+                >
+                  Cancelar
+                </Button>
+              </div>
+
+            </TooltipHoverCard>
             <FormField
               control={form.control}
               name={'description'}
@@ -180,7 +299,6 @@ function CreateTransactionDialog({
               name={'amount'}
               render={({ field }) => (
                 <FormItem>
-                  {/* <FormLabel>Total</FormLabel> */}
                   <FormControl>
                     <MoneyInput
                       form={form}
@@ -195,6 +313,86 @@ function CreateTransactionDialog({
                 </FormItem>
               )}
             />
+            <div className='hover:bg-accent/50 flex items-center justify-center gap-3 rounded-lg border p-3 has-[[aria-checked=true]]:border-blue-600 has-[[aria-checked=true]]:bg-blue-50 dark:has-[[aria-checked=true]]:border-blue-900 dark:has-[[aria-checked=true]]:bg-blue-950'>
+              <FormField
+                control={form.control}
+                name="isRecurring"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center gap-6 justify-between rounded-lg p-2">
+                    <FormControl>
+                      <Switch
+                        className='data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700'
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="grid gap-1.5 font-normal space-y-0.5">
+                      <FormLabel className="text-sm leading-none font-medium">
+                        Pagamento recorrente?
+                      </FormLabel>
+                      <FormDescription className='text-muted-foreground text-sm'>
+                        Receive notifications via email.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className='flex flex-row-reverse gap-2'>
+              {form.watch('isRecurring') && (
+                <Fragment>
+                  <FormField
+                    control={form.control}
+                    name="installments"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>N° parcelas</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={1}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Defina o Número de Parcelas
+                        </FormDescription>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="recurrenceInterval"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Frequência da recorrência</FormLabel>
+                        <FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione a frequência" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="MONTHLY">Mensal</SelectItem>
+                              <SelectItem value="YEARLY">Anual</SelectItem>
+                              <SelectItem value="WEEKLY">we</SelectItem>
+                              <SelectItem value="DAILY">Daily</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormDescription>
+                          Defina se o pagamento se repete mensalmente ou anualmente
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </Fragment>
+              )}
+            </div>
             <div className="flex flex-col gap-4 sm:flex-row w-full">
               <FormField
                 control={form.control}
@@ -219,15 +417,17 @@ function CreateTransactionDialog({
                 control={form.control}
                 name={'date'}
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="mr-5">Data da transação</FormLabel>
-                    <Popover>
+                  <FormItem className="flex w-full flex-col">
+                    <FormLabel>Data da transação</FormLabel>
+
+                    <Popover modal>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
-                            variant={'outline'}
+                            type="button"
+                            variant="outline"
                             className={cn(
-                              'pl-3 text-left font-normal',
+                              'w-full justify-between text-left font-normal',
                               !field.value && 'text-muted-foreground',
                             )}
                           >
@@ -236,11 +436,16 @@ function CreateTransactionDialog({
                             ) : (
                               <span>Escolha a data</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            <CalendarIcon className="h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
+
+                      <PopoverContent
+                        align="center"
+                        side="bottom"
+                        className="z-[9999] max-w-sm p-2"
+                      >
                         <Calendar
                           mode="single"
                           selected={field.value}
@@ -252,11 +457,15 @@ function CreateTransactionDialog({
                         />
                       </PopoverContent>
                     </Popover>
-                    <FormDescription>Defina uma data para isso</FormDescription>
+
+                    <FormDescription>
+                      Defina uma data para isso
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
             </div>
           </form>
         </Form>

@@ -130,7 +130,7 @@ function CreateCategoryDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className='w-[95vw] max-w-lg sm:max-w-2xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>
             Criar{' '}
@@ -167,58 +167,72 @@ function CreateCategoryDialog({
             />
             <FormField
               control={form.control}
-              name={'icon'}
+              name="icon"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Icone</FormLabel>
+                  <FormLabel>Ícone</FormLabel>
                   <FormControl>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
-                          variant={'outline'}
-                          className="h-[100px] w-full"
+                          variant="outline"
+                          className="w-full min-h-[72px] sm:min-h-[100px]"
                         >
-                          {form.watch('icon') ? (
-                            <div className="flex flex-col items-center gap-2">
+                          {field.value ? (
+                            <div className="flex flex-col items-center justify-center gap-1">
                               <span className="text-3xl" role="img">
                                 {field.value}
                               </span>
                               <p className="text-xs text-muted-foreground">
-                                Clique para trocar
+                                Toque para trocar
                               </p>
                             </div>
                           ) : (
-                            <div className="flex flex-col items-center gap-2">
-                              <CircleOff className="h-48px] w-[48px]" />
+                            <div className="flex flex-col items-center justify-center gap-1">
+                              <CircleOff className="h-8 w-8 text-muted-foreground" />
                               <p className="text-xs text-muted-foreground">
-                                Clique para selecionar
+                                Toque para selecionar
                               </p>
                             </div>
                           )}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-full">
-                        <Picker
-                          data={data}
-                          theme={theme.resolvedTheme}
-                          navPosition="bottom"
-                          previewPosition="top"
-                          searchPosition="sticky"
-                          skinTonePosition="preview"
-                          onEmojiSelect={(emoji: { native: string }) => {
-                            field.onChange(emoji.native)
-                          }}
-                        />
+
+                      <PopoverContent
+                        side="bottom"
+                        align="center"
+                        className="
+                          w-[95vw] max-w-sm
+                          sm:w-[420px]
+                          p-0
+                          max-h-[80vh]
+                          overflow-hidden
+                        "
+                      >
+                        <div className="max-h-[70vh] overflow-y-auto">
+                          <Picker
+                            data={data}
+                            theme={theme.resolvedTheme}
+                            navPosition="bottom"
+                            previewPosition="top"
+                            searchPosition="sticky"
+                            skinTonePosition="preview"
+                            onEmojiSelect={(emoji: { native: string }) => {
+                              field.onChange(emoji.native)
+                            }}
+                          />
+                        </div>
                       </PopoverContent>
                     </Popover>
                   </FormControl>
+
                   <FormDescription>
-                    Isso é como a sua categoria irá aparecer no aplicativo
-                    (requerido)
+                    Esse ícone representa visualmente sua categoria
                   </FormDescription>
                 </FormItem>
               )}
             />
+
           </form>
         </Form>
         <DialogFooter className='gap-2 sm:gap-0'>

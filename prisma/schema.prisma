@@ -12,51 +12,78 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  USER
+  ADMIN
+  STARTER
+  PREMIUM
+}
+
+// Novo Schema para controlar limites de IA e acessos
+model UserUsage {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  aiGenerationsUsed Int      @default(0)
+  aiLimit           Int      @default(5) // Limite default para USER
+  
+  // Outros limites que você pode querer controlar
+  maxHabits         Int      @default(10)
+  canUseVoice       Boolean  @default(false)
+
+  lastReset         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
 model User {
-  id          String   @id @default(uuid())
-  email       String
-  
-  firstName   String?
-  lastName    String?
-  imageUrl    String?
-  
-  clerkUserId String
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id    String @id @default(uuid())
+  email String
+
+  // 2. Atualize o campo role para usar o Enum
+  role         Role     @default(USER)
+  // Relacionamento com o esquema de limites
+  usage        UserUsage?
+
+  firstName String?
+  lastName  String?
+  imageUrl  String?
+
+  clerkUserId String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   categories   Category[]
   transactions Transaction[]
   settings     UserSettings?
 
-  monthHistory  MonthHistory[]
-  yearHistory   YearHistory[]
-
-  @@unique([id, email, clerkUserId])
+  monthHistory MonthHistory[]
+  yearHistory  YearHistory[]
 }
 
 model UserSettings {
-  currency  String 
-  userId    String    @id
+  currency String
+  userId   String @id
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Category {
-  id        String   @id @default(uuid())
-  
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id String @id @default(uuid())
 
-  name      String
-  type      String   @default("income")
-  icon      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  userId    String
-  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name String
+  type String @default("income")
+  icon String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   transactions Transaction[]
 
@@ -64,49 +91,71 @@ model Category {
 }
 
 model Transaction {
-  id            String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  amount        Float      
-  description   String
-  date          DateTime
-  type          String  @default("income")
+  amount      Float
+  description String
+  date        DateTime
+  type        String   @default("income")
 
-  categoryIcon  String
+  categoryIcon String
 
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  receiptUrl         String?
+  isRecurring        Boolean             @default(false)
+  recurrenceInterval RECURRENCEINTERVAL?
+  paymentMethod      PAYMENTMETHOD?
 
-  categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 }
 
 model MonthHistory {
-  day           Int
-  month         Int      
-  year          Int
+  day   Int
+  month Int
+  year  Int
 
-  income        Float
-  expanse       Float
+  income  Float
+  expanse Float
 
-  userId        String
-  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([day, month, year, userId])
 }
 
 model YearHistory {
-  userId         String
-  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  month         Int      
-  year          Int
+  month Int
+  year  Int
 
-  income        Float
-  expanse       Float
+  income  Float
+  expanse Float
 
   @@id([month, year, userId])
+}
+
+enum TYPES {
+  EXPANSE
+  INCOME
+}
+
+enum RECURRENCEINTERVAL {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum PAYMENTMETHOD {
+  CARD
+  BANK_TRANSFER
+  MOBILE_PAYMENT
 }
