@@ -25,8 +25,12 @@ const geistMono = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'Finanças',
-  description: 'Finanças',
+  title: "Budget Tracker - Laboratório de finanças",
+  description: "Gerêncie suas finanças e despesas de forma dinâmica",
+  icons: {
+    icon: "/logo3.png",
+    apple: "/logo3.png",
+  },
 }
 
 export default async function RootLayout({
@@ -43,7 +47,7 @@ export default async function RootLayout({
       <head />
       <ClerkProvider>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`antialiased ${geistSans.variable} ${geistMono.variable} antialiased`}
         >
           <Toaster theme='dark' richColors position="bottom-right" />
           <QueryClientProvider>
