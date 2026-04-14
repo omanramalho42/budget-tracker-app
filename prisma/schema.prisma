@@ -12,9 +12,38 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  USER
+  ADMIN
+  STARTER
+  PREMIUM
+}
+
+// Novo Schema para controlar limites de IA e acessos
+model UserUsage {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  aiGenerationsUsed Int      @default(0)
+  aiLimit           Int      @default(5) // Limite default para USER
+  
+  // Outros limites que você pode querer controlar
+  maxHabits         Int      @default(10)
+  canUseVoice       Boolean  @default(false)
+
+  lastReset         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
 model User {
   id    String @id @default(uuid())
   email String
+
+  // 2. Atualize o campo role para usar o Enum
+  role         Role     @default(USER)
+  // Relacionamento com o esquema de limites
+  usage        UserUsage?
 
   firstName String?
   lastName  String?
@@ -130,6 +159,3 @@ enum PAYMENTMETHOD {
   BANK_TRANSFER
   MOBILE_PAYMENT
 }
-
-// CLOUDNARY_SECRET_API_KEY
-// GOOGLE_SECRET_API_KEY

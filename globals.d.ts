@@ -4,6 +4,9 @@ type WelcomeEmailData = {
   intro: string;
 };
 
+// globals.d.ts
+declare module '*.css';
+
 type RawNewsArticle = {
   id: number;
   headline?: string;
