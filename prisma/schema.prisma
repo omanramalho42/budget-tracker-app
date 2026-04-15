@@ -106,6 +106,7 @@ model Transaction {
   receiptUrl         String?
   isRecurring        Boolean             @default(false)
   recurrenceInterval RECURRENCEINTERVAL?
+  nextRecurringDate  DateTime?
   paymentMethod      PAYMENTMETHOD?
 
   userId String

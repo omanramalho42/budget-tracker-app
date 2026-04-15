@@ -22,25 +22,20 @@ export async function DeleteTransaction(id: string) {
   if(userDb) {
     const transaction = await prisma.transaction.findUnique({
       where: {
-        userId: userDb.id,
-        id,
+        id
       },
-      include: {
-        category: true
-      }
+      include: { category: true }
     })
-  
-    if (!transaction) throw new Error('Bad request');
 
+    if (!transaction || transaction.userId !== userDb.id) {
+      throw new Error('Unauthorized')
+    }
     await prisma.$transaction([
       prisma.transaction.delete({
-        where: {
-          userId: userDb.id,
-          id,
-        },
+        where: { id },
       }),
-  
-      prisma.monthHistory.update({
+
+      prisma.monthHistory.upsert({
         where: {
           day_month_year_userId: {
             userId: userDb.id,
@@ -49,7 +44,15 @@ export async function DeleteTransaction(id: string) {
             year: transaction.date.getUTCFullYear(),
           },
         },
-        data: {
+        create: {
+          userId: userDb.id,
+          day: transaction.date.getUTCDate(),
+          month: transaction.date.getUTCMonth(),
+          year: transaction.date.getUTCFullYear(),
+          expanse: transaction.type === 'expanse' ? -transaction.amount : 0,
+          income: transaction.type === 'income' ? -transaction.amount : 0,
+        },
+        update: {
           ...(transaction.type === 'expanse' && {
             expanse: {
               decrement: transaction.amount,
@@ -62,8 +65,8 @@ export async function DeleteTransaction(id: string) {
           }),
         },
       }),
-  
-      prisma.yearHistory.update({
+
+      prisma.yearHistory.upsert({
         where: {
           month_year_userId: {
             userId: userDb.id,
@@ -71,7 +74,14 @@ export async function DeleteTransaction(id: string) {
             year: transaction.date.getUTCFullYear(),
           },
         },
-        data: {
+        create: {
+          userId: userDb.id,
+          month: transaction.date.getUTCMonth(),
+          year: transaction.date.getUTCFullYear(),
+          expanse: transaction.type === 'expanse' ? -transaction.amount : 0,
+          income: transaction.type === 'income' ? -transaction.amount : 0,
+        },
+        update: {
           ...(transaction.type === 'expanse' && {
             expanse: {
               decrement: transaction.amount,

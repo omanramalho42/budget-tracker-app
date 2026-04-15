@@ -11,85 +11,180 @@ import {
   CreateTransactionSchemaType,
   CreateTransactionSchema,
 } from '@/schema/transaction'
+
 import { calculateNextOcurrence } from '@/lib/helpers'
+import { PAYMENTMETHOD } from '@prisma/client'
+
+const mapPaymentMethod = (method?: string | null): PAYMENTMETHOD | null => {
+  if (!method) return null
+
+  const map: Record<string, PAYMENTMETHOD> = {
+    credit: PAYMENTMETHOD.CARD,
+    debit: PAYMENTMETHOD.BANK_TRANSFER,
+    pix: PAYMENTMETHOD.MOBILE_PAYMENT,
+  }
+
+  return map[method] || null
+}
 
 export async function CreateTransaction(form: CreateTransactionSchemaType) {
+  const log = (step: string, data?: any) => {
+    console.log(`\n🧠 [${step}]`)
+    if (data !== undefined) {
+      console.log(JSON.stringify(data, null, 2))
+    }
+  }
+
+  log('START')
+
+  // =============================
+  // ✅ VALIDATION
+  // =============================
   const parsedBody = CreateTransactionSchema.safeParse(form)
 
-  if (!parsedBody.success) throw new Error(parsedBody.error.message)
+  if (!parsedBody.success) {
+    log('❌ VALIDATION ERROR', parsedBody.error.format())
+    throw new Error(parsedBody.error.message)
+  }
 
+  log('✅ VALIDATION OK', parsedBody.data)
+
+  // =============================
+  // 👤 USER
+  // =============================
   const user = await currentUser()
+
   if (!user) {
+    log('❌ NO USER')
     redirect('/sign-in')
   }
 
-  // VERIFICAR SE O USUARIO EXISTE NO BD
+  log('👤 USER AUTHENTICATED', { clerkId: user.id })
+
+  // =============================
+  // 🗄️ USER DB
+  // =============================
   const userDb = await prisma.user.findFirst({
+    where: { clerkUserId: user.id },
+  })
+
+  if (!userDb) {
+    log('❌ USER NOT FOUND IN DB')
+    throw new Error('User not found')
+  }
+
+  log('✅ USER DB FOUND', { userId: userDb.id })
+
+  // =============================
+  // 📦 DATA EXTRACTION
+  // =============================
+  const {
+    amount,
+    category,
+    date,
+    type,
+    description,
+    receiptUrl,
+    isRecurring,
+    recurrenceInterval,
+    installments,
+    paymentMethod, // 👈 ADD
+  } = parsedBody.data
+
+  log('📦 RAW DATA', parsedBody.data)
+
+  // =============================
+  // 📂 CATEGORY
+  // =============================
+  const categoryRow = await prisma.category.findFirst({
     where: {
-      clerkUserId: user.id,
+      userId: userDb.id,
+      name: category,
+      type,
     },
   })
 
-  // FIND EXISTS FOLLOWING CATEGORY NAME
-  if(userDb) {
-    const {
-      amount,
-      category,
-      date,
-      type,
-      description,
-      installments,
-      isRecurring,
-      recurrenceInterval
-    } = parsedBody.data
+  if (!categoryRow) {
+    log('❌ CATEGORY NOT FOUND', { category })
+    throw new Error('Category not found')
+  }
 
-    const categoryRow = await prisma.category.findFirst({
-      where: {
-        userId: userDb.id,
-        name: category,
-        type: type,
-      },
+  log('✅ CATEGORY FOUND', categoryRow)
+
+  // =============================
+  // 🔢 INSTALLMENTS LOGIC
+  // =============================
+  const finalInstallments =
+    recurrenceInterval === 'DAILY' ? 1 : installments || 1
+
+  log('🔢 INSTALLMENTS CALCULATED', {
+    original: installments,
+    final: finalInstallments,
+    recurrenceInterval,
+  })
+
+  // =============================
+  // 📆 TRANSACTION GENERATION
+  // =============================
+  let currentDate = new Date(date)
+
+  const transactionsToCreate = []
+
+  for (let i = 0; i < finalInstallments; i++) {
+    const nextDate =
+      i === 0
+        ? currentDate
+        : calculateNextOcurrence(
+            currentDate,
+            recurrenceInterval || 'MONTHLY'
+          )
+
+    log(`📆 CALCULATING DATE [${i}]`, {
+      previousDate: currentDate,
+      nextDate,
     })
-    if (!categoryRow) throw new Error('Category not found')
 
-    if (isRecurring && recurrenceInterval) {
-      let nextRecurringDate: Date | undefined;
-      const currentDate = new Date();
-      
-      const calculatedDate = calculateNextOcurrence(
-        date,
-        recurrenceInterval
-      )
+    currentDate = nextDate
 
-      nextRecurringDate = 
-        calculatedDate < currentDate 
-        ? calculateNextOcurrence(
-          currentDate,
-          recurrenceInterval
-        ) : calculatedDate;
+  const tx = {
+    userId: userDb.id,
+    amount: amount / finalInstallments,
+    date: nextDate,
+    description: description || '',
+    type,
+    receiptUrl,
+    categoryIcon: categoryRow.icon,
+    categoryId: categoryRow.id,
 
-        // CREATE ON DB
-        // ISRECURRING: ISRECURRING || FALSE
-        // RECURRINGINTERVAL: RECURRINGINTERVAL || NULL
-        // NEXTRECURRINGDATE,
-        // LSATPROCESSED: NULL,
-    }
+    isRecurring: isRecurring || false,
+    recurrenceInterval: recurrenceInterval || null,
+    nextRecurringDate:
+      isRecurring && recurrenceInterval
+        ? calculateNextOcurrence(nextDate, recurrenceInterval)
+        : null,
 
-    return await prisma.$transaction([
-      prisma.transaction.create({
-        data: {
-          userId: userDb.id,
-          amount,
-          date,
-          description: description || '',
-          type,
-          categoryIcon: categoryRow.icon,
-          categoryId: categoryRow.id
-        }, include: {
-          category: true
-        }
+    paymentMethod: mapPaymentMethod(paymentMethod), // ✅ FIX
+  }
+
+    log(`🧾 TRANSACTION BUILT [${i}]`, tx)
+
+    transactionsToCreate.push(tx)
+  }
+
+  log('📦 FINAL TRANSACTIONS ARRAY', transactionsToCreate)
+
+  // =============================
+  // 💾 DATABASE TRANSACTION
+  // =============================
+  try {
+    log('🚀 SENDING TO DATABASE')
+
+    const result = await prisma.$transaction([
+      ...transactionsToCreate.map((tx, index) => {
+        log(`💾 INSERTING TRANSACTION [${index}]`, tx)
+        return prisma.transaction.create({ data: tx })
       }),
-  
+
       prisma.monthHistory.upsert({
         where: {
           day_month_year_userId: {
@@ -116,7 +211,7 @@ export async function CreateTransaction(form: CreateTransactionSchemaType) {
           },
         },
       }),
-  
+
       prisma.yearHistory.upsert({
         where: {
           month_year_userId: {
@@ -142,145 +237,12 @@ export async function CreateTransaction(form: CreateTransactionSchemaType) {
         },
       }),
     ])
+
+    log('🎉 SUCCESS - TRANSACTIONS CREATED', result)
+
+    return result
+  } catch (error) {
+    log('💥 DATABASE ERROR', error)
+    throw error
   }
 }
-
-// 'use server'
-
-// import { revalidateTag } from 'next/cache'
-// import { redirect } from 'next/navigation'
-
-// import { currentUser } from '@clerk/nextjs/server'
-// import { addMonths } from 'date-fns'
-
-// import { prisma } from '@/lib/prisma'
-// import {
-//   CreateTransactionSchemaType,
-//   CreateTransactionSchema,
-// } from '@/schema/transaction'
-
-// export async function CreateTransaction(form: CreateTransactionSchemaType) {
-//   const parsedBody = CreateTransactionSchema.safeParse(form)
-//   if (!parsedBody.success) {
-//     throw new Error(parsedBody.error.message)
-//   }
-
-//   const user = await currentUser()
-//   if (!user) {
-//     redirect('/sign-in')
-//   }
-
-//   const userDb = await prisma.user.findFirst({
-//     where: { clerkUserId: user.id },
-//   })
-
-//   if (!userDb) {
-//     throw new Error('User not found')
-//   }
-
-//   const {
-//     amount,
-//     category,
-//     date,
-//     type,
-//     description,
-//     installments = 1,
-//     isRecurring,
-//   } = parsedBody.data
-
-//   const categoryRow = await prisma.category.findFirst({
-//     where: {
-//       userId: userDb.id,
-//       name: category,
-//       type,
-//     },
-//   })
-
-//   if (!categoryRow) throw new Error('Category not found')
-
-//   const totalInstallments =
-//     isRecurring && installments > 1 ? installments : 1
-
-//   const installmentAmount = amount / totalInstallments
-
-//   const operations = []
-
-//   for (let i = 0; i < totalInstallments; i++) {
-//     const installmentDate = addMonths(date, i)
-
-//     operations.push(
-//       prisma.transaction.create({
-//         data: {
-//           userId: userDb.id,
-//           amount: installmentAmount,
-//           date: installmentDate,
-//           description:
-//             totalInstallments > 1
-//               ? `${description || ''} (${i + 1}/${totalInstallments})`
-//               : description || '',
-//           type,
-//           categoryIcon: categoryRow.icon,
-//           categoryId: categoryRow.id,
-//         },
-//       }),
-
-//       prisma.monthHistory.upsert({
-//         where: {
-//           day_month_year_userId: {
-//             userId: userDb.id,
-//             day: installmentDate.getUTCDate(),
-//             month: installmentDate.getUTCMonth(),
-//             year: installmentDate.getUTCFullYear(),
-//           },
-//         },
-//         create: {
-//           userId: userDb.id,
-//           day: installmentDate.getUTCDate(),
-//           month: installmentDate.getUTCMonth(),
-//           year: installmentDate.getUTCFullYear(),
-//           expanse: type === 'expanse' ? installmentAmount : 0,
-//           income: type === 'income' ? installmentAmount : 0,
-//         },
-//         update: {
-//           expanse: {
-//             increment: type === 'expanse' ? installmentAmount : 0,
-//           },
-//           income: {
-//             increment: type === 'income' ? installmentAmount : 0,
-//           },
-//         },
-//       }),
-
-//       prisma.yearHistory.upsert({
-//         where: {
-//           month_year_userId: {
-//             userId: userDb.id,
-//             month: installmentDate.getUTCMonth(),
-//             year: installmentDate.getUTCFullYear(),
-//           },
-//         },
-//         create: {
-//           userId: userDb.id,
-//           month: installmentDate.getUTCMonth(),
-//           year: installmentDate.getUTCFullYear(),
-//           expanse: type === 'expanse' ? installmentAmount : 0,
-//           income: type === 'income' ? installmentAmount : 0,
-//         },
-//         update: {
-//           expanse: {
-//             increment: type === 'expanse' ? installmentAmount : 0,
-//           },
-//           income: {
-//             increment: type === 'income' ? installmentAmount : 0,
-//           },
-//         },
-//       }),
-//     )
-//   }
-
-//   const result = await prisma.$transaction(operations)
-
-//   revalidateTag('overview')
-
-//   return result
-// }

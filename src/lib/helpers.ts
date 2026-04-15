@@ -41,19 +41,33 @@ enum INTERVALINTERVALTYPE {
   "YEARLY"
 }
 
-export function calculateNextOcurrence(date: Date, interval: keyof typeof INTERVALINTERVALTYPE) {
-  const base = new Date(date)
-  base.setHours(0,0,0,0)
+export function calculateNextOcurrence(
+  date: Date,
+  interval: keyof typeof INTERVALINTERVALTYPE
+) {
+  const base = new Date(date) // ✅ não muta original
 
-  switch(interval) {
+  switch (interval) {
     case 'DAILY':
       return addDays(base, 1)
+
     case 'WEEKLY':
       return addWeeks(base, 1)
-    case 'MONTHLY':
-      return addMonths(base, 1)
+
+    case 'MONTHLY': {
+      const next = addMonths(base, 1)
+
+      // 🔥 mantém o mesmo dia do mês quando possível
+      if (base.getDate() !== next.getDate()) {
+        next.setDate(0) // último dia do mês anterior
+      }
+
+      return next
+    }
+
     case 'YEARLY':
       return addYears(base, 1)
+
     default:
       return base
   }

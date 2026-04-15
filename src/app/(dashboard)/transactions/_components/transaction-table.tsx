@@ -63,7 +63,8 @@ type TransactionHistoryRow = GetTransactionHistoryResponseType[0]
 
 export const columns: ColumnDef<TransactionHistoryRow>[] = [
   {
-    accessorKey: 'category.id',
+    accessorKey: 'category',
+    accessorFn: (row) => row.category?.id, // 🔥 MELHOR QUE accessorKey
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Categoria" />
     ),

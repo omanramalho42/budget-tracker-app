@@ -7,7 +7,7 @@ import { format } from 'date-fns'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 import { TransactionType } from '@/lib/types'
-import { cn } from '@/lib/utils'
+import { cn, fileToBase64 } from '@/lib/utils'
 
 import { useForm } from 'react-hook-form'
 
@@ -56,14 +56,14 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import MoneyInput from '@/components/money-input'
 import CategoryPicker from './category-picker'
 import FileUploader from './file-uploader'
-import TooltipHoverCard from './tooltips/tooltip-hover-card'
 
 import { DateToUTCDate } from '@/lib/helpers'
 
 import { CalendarIcon, Loader, Loader2 } from 'lucide-react'
+import MoneyInput from '@/components/money-input'
+import { uploadReceipt } from '../transactions/_actions/upload-file'
 
 interface CreateTransactionsDialogProps {
   trigger: React.ReactNode
@@ -82,14 +82,36 @@ function CreateTransactionDialog({
   const [loading, setLoading] = useState<boolean>(false)
   const [open, setOpen] = useState<boolean>(false)
 
+  const [openAi, setOpenAi] = useState<boolean>(false)
+
+  const [aiStep, setAiStep] = useState<string>('')
+  const simulateAIProcessing = async () => {
+    const steps = [
+      '📸 Lendo imagem...',
+      '🧠 Analisando recibo...',
+      '💰 Identificando valores...',
+      '📅 Extraindo data...',
+      '🏷️ Gerando descrição...',
+      '✅ Finalizando...',
+    ]
+
+    for (let i = 0; i < steps.length; i++) {
+      setAiStep(steps[i])
+      await new Promise((res) => setTimeout(res, 700))
+    }
+  }
   const form = useForm<CreateTransactionSchemaType>({
     resolver: zodResolver(CreateTransactionSchema),
-    defaultValues: {
-      type,
-      date: new Date(),
-      installments: 1,
-      receiptUrl: ""
-    },
+      defaultValues: {
+        type,
+        date: new Date(),
+        installments: 1,
+        receiptUrl: "",
+        description: "",   // ✅ importante
+        amount: 0,         // ✅ importante
+        isRecurring: false, // ✅ importante
+        paymentMethod: undefined // 👈 adicionar aqui
+      }
   })
 
   const queryClient = useQueryClient()
@@ -117,7 +139,8 @@ function CreateTransactionDialog({
         description: '',
         type,
         installments: 1,
-        isRecurring: false
+        isRecurring: false,
+        paymentMethod: undefined
       })
 
       // Invalidate and refetch
@@ -129,7 +152,8 @@ function CreateTransactionDialog({
 
       setOpen((prev) => !prev)
     },
-    onError: () => {
+    onError: (error) => {
+      console.log(error ,"error")
       toast.error('Aconteceu algo de errado', {
         id: 'create-transaction',
       })
@@ -142,9 +166,10 @@ function CreateTransactionDialog({
         id: 'create-transaction',
       })
       console.log(values, "values")
+      const { receiptFiles, ...safeValues } = values
+      console.log(safeValues, "safe values")
       mutate({
-        ...values,
-        date: DateToUTCDate(values.date),
+        ...safeValues,
       })
     },
     [mutate],
@@ -173,107 +198,109 @@ function CreateTransactionDialog({
             className="space-y-4"
             onSubmit={form.handleSubmit(onSubmit)}
           >
-            <TooltipHoverCard>
-              <FormField
-                control={form.control}
-                name="receiptFiles"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ai receipt scan</FormLabel>
-                    <FormControl>
-                      <FileUploader
-                        files={field.value}
-                        onChange={(file) => {
-                          console.log(file, "file")
-                          field.onChange(file)
-                        }}
-                      />
-                    </FormControl>
-                    <FormDescription />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex flex-col sm:flex-row gap-3">
+            <Dialog open={openAi} onOpenChange={setOpenAi}>
+              <DialogTrigger asChild>
                 <Button
-                  type='button'
+                  type="button"
+                  variant="outline"
+                >
+                  📄 Escanear Recibo com IA
+                </Button>
+              </DialogTrigger>
+
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Escanear recibo</DialogTitle>
+                </DialogHeader>
+
+                <FormField
+                  control={form.control}
+                  name="receiptFiles"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Upload do recibo</FormLabel>
+                      <FormControl>
+                        <FileUploader
+                          files={field.value}
+                          onChange={(file) => field.onChange(file)}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <Button
                   disabled={!form.watch('receiptFiles') || loading}
-                  onClick={async (e) => {
-                    e.preventDefault()
-                    // if (abortControllerRef.current) return
-
-                    abortControllerRef.current = new AbortController()
-                    
+                  onClick={async () => {
                     setLoading(true)
-                    let receiptUrl = ``
+                    simulateAIProcessing()
 
-                    const formData = new FormData()
-                    const files = Array.from(
-                      form.watch('receiptFiles') as FileList | File[]
-                    )
+                    try {
+                      const file = (form.watch('receiptFiles') as FileList)[0]
 
-                    files.forEach((file) => {
+                      if (!file) return
+
+                      // 🔥 converte para base64
+                      const base64 = await fileToBase64(file)
+
+                      // 🔥 chama server action
+                      const uploadRes = await uploadReceipt(base64)
+
+                      // salva no form
+                      form.setValue('receiptUrl', uploadRes.url)
+
+                      // 🔥 continua com IA
+                      const formData = new FormData()
                       formData.append('file', file)
-                    })
-                    
-                    const folderName = 'cloudinary-budget'
-                    formData.append("folderName", folderName)
 
-                    const { data: resData } = 
-                      await axios.post(`/api/upload`,
-                        formData,
-                        {
-                          signal: abortControllerRef.current.signal,
-                        }
-                      )
-                    
-                    if(resData.error) {
-                      alert("Error uploading file")
-                      return
+                      const { data } = await axios.post('/api/scan-receipt', formData)
+
+                      form.setValue('description', data.description || '')
+                      form.setValue('amount', Number(data.amount) || 0)
+
+                      const [year, month, day] = data.date.split('-').map(Number)
+                      const parsedDate = new Date(year, month - 1, day)
+
+                      form.setValue('date', parsedDate, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      })
+
+                      setAiStep('🎉 Concluído!')
+
+                      setTimeout(() => {
+                        setLoading(false)
+                        setOpenAi(false)
+                      }, 500)
+
+                      toast.success('Recibo processado 🚀')
+                    } catch (err) {
+                      console.error(err)
+                      toast.error('Erro ao processar')
+                      setLoading(false)
                     }
-                    console.log(resData, "receiptUrl")
-                    receiptUrl = resData
-                    form.setValue('receiptUrl', resData)
-
-                    setLoading(false)
-                    toast.success(
-                      "File uploaded sucessfully",
-                      { id: 'file-uploaded-sucess' }
-                    )
-                    form.reset({
-                      receiptFiles: []
-                    })
-
-                    return
                   }}
                 >
-                  {loading ? 
-                    (<Loader 
-                        className='animate-spin'
-                      />
-                    ) : ('Criar +')
-                  }
+                  {loading ? <Loader className="animate-spin" /> : 'Escanear'}
                 </Button>
-                <Button
-                  onClick={() => {
-                    if (abortControllerRef.current) {
-                      abortControllerRef.current.abort()
-                      abortControllerRef.current = null
-                    }
+                {loading && (
+                  <div className="mt-4 p-4 rounded-xl border bg-muted/50 flex flex-col items-center gap-3 animate-in fade-in">
+                    
+                    <Loader className="animate-spin w-6 h-6" />
 
-                    setLoading(false)
-                    form.reset({
-                      receiptFiles: [],
-                    })
-                    setOpen(false)
-                  }}
-                >
-                  Cancelar
-                </Button>
-              </div>
+                    <p className="text-sm text-muted-foreground text-center">
+                      {aiStep}
+                    </p>
 
-            </TooltipHoverCard>
+                    {/* Barra fake de progresso */}
+                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-500 animate-[progress_3s_linear]" />
+                    </div>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
+
             <FormField
               control={form.control}
               name={'description'}
@@ -282,9 +309,9 @@ function CreateTransactionDialog({
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
                     <Input
-                      defaultValue={''}
                       type="text"
-                      {...field}
+                      value={field.value}
+                      onChange={field.onChange}
                     />
                   </FormControl>
                   <FormDescription>
@@ -294,25 +321,45 @@ function CreateTransactionDialog({
               )}
             />
 
+            <MoneyInput
+              form={form}
+              label="Valor total"
+              placeholder="Valor"
+              name="amount"
+            />
+
             <FormField
               control={form.control}
-              name={'amount'}
+              name="paymentMethod"
               render={({ field }) => (
                 <FormItem>
+                  <FormLabel>Método de pagamento</FormLabel>
                   <FormControl>
-                    <MoneyInput
-                      form={form}
-                      label="Valor total"
-                      placeholder="Valor"
-                      {...field}
-                    />
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o método" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectItem value="credit">Cartão de crédito</SelectItem>
+                        <SelectItem value="debit">Cartão de débito</SelectItem>
+                        <SelectItem value="pix">PIX</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </FormControl>
+
                   <FormDescription>
-                    Valor total da transação (requerido)
+                    Como essa transação foi paga
                   </FormDescription>
+
+                  <FormMessage />
                 </FormItem>
               )}
             />
+
             <div className='hover:bg-accent/50 flex items-center justify-center gap-3 rounded-lg border p-3 has-[[aria-checked=true]]:border-blue-600 has-[[aria-checked=true]]:bg-blue-50 dark:has-[[aria-checked=true]]:border-blue-900 dark:has-[[aria-checked=true]]:bg-blue-950'>
               <FormField
                 control={form.control}
@@ -352,7 +399,9 @@ function CreateTransactionDialog({
                           <Input
                             type="number"
                             min={1}
-                            {...field}
+                            value={field.value}
+                            onChange={field.onChange}
+                            disabled={form.watch('recurrenceInterval') === 'DAILY'}
                           />
                         </FormControl>
                         <FormDescription>
@@ -361,6 +410,7 @@ function CreateTransactionDialog({
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="recurrenceInterval"
@@ -369,8 +419,15 @@ function CreateTransactionDialog({
                         <FormLabel>Frequência da recorrência</FormLabel>
                         <FormControl>
                           <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            // {...field}
+                            value={field.value}
+                            onValueChange={(value) => {
+                              field.onChange(value)
+
+                              if (value === 'DAILY') {
+                                form.setValue('installments', 1)
+                              }
+                            }}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Selecione a frequência" />
@@ -393,13 +450,16 @@ function CreateTransactionDialog({
                 </Fragment>
               )}
             </div>
+
             <div className="flex flex-col gap-4 sm:flex-row w-full">
               <FormField
                 control={form.control}
                 name={'category'}
                 render={() => (
                   <FormItem className="flex flex-col w-full">
-                    <FormLabel className="mr-5">Categoria</FormLabel>
+                    <FormLabel className="mr-5">
+                      Categoria
+                    </FormLabel>
                     <FormControl className='w-full'>
                       <CategoryPicker
                         type={type}
@@ -431,8 +491,8 @@ function CreateTransactionDialog({
                               !field.value && 'text-muted-foreground',
                             )}
                           >
-                            {field.value ? (
-                              format(field.value, 'PPP')
+                            {field.value && !isNaN(new Date(field.value).getTime()) ? (
+                              format(new Date(field.value), 'PPP')
                             ) : (
                               <span>Escolha a data</span>
                             )}

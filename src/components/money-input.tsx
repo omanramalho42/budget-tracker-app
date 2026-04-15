@@ -1,15 +1,14 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
-import { useReducer } from 'react'
+
+import { useReducer, useEffect } from 'react'
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from './ui/form' // Shadcn UI import
-import { Input } from './ui/input' // Shandcn UI Input
+} from './ui/form'
+import { Input } from './ui/input'
 import { UseFormReturn } from 'react-hook-form'
 
 type TextInputProps = {
@@ -19,39 +18,30 @@ type TextInputProps = {
   placeholder: string
 }
 
-// Brazilian currency config
 const moneyFormatter = Intl.NumberFormat('pt-BR', {
-  currency: 'BRL',
-  currencyDisplay: 'symbol',
-  currencySign: 'standard',
   style: 'currency',
+  currency: 'BRL',
   minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
 })
 
 export default function MoneyInput(props: TextInputProps) {
-  const initialValue = props.form.getValues()[props.name]
-    ? moneyFormatter.format(props.form.getValues()[props.name])
-    : ''
-
   const [value, setValue] = useReducer((_: any, next: string) => {
     const digits = next.replace(/\D/g, '')
     return moneyFormatter.format(Number(digits) / 100)
-  }, initialValue)
-
-  function handleChange(realChangeFn: Function, formattedValue: string) {
-    const digits = formattedValue.replace(/\D/g, '')
-    const realValue = Number(digits) / 100
-    realChangeFn(realValue)
-  }
+  }, '')
 
   return (
     <FormField
       control={props.form.control}
       name={props.name}
       render={({ field }) => {
-        field.value = value
-        const _change = field.onChange
+
+        // 🔥 sincroniza quando valor vem de fora (IA)
+        useEffect(() => {
+          if (field.value !== undefined && field.value !== null) {
+            setValue(moneyFormatter.format(field.value))
+          }
+        }, [field.value])
 
         return (
           <FormItem>
@@ -60,12 +50,16 @@ export default function MoneyInput(props: TextInputProps) {
               <Input
                 placeholder={props.placeholder}
                 type="text"
-                {...field}
-                onChange={(ev) => {
-                  setValue(ev.target.value)
-                  handleChange(_change, ev.target.value)
-                }}
                 value={value}
+                onChange={(ev) => {
+                  const formatted = ev.target.value
+                  setValue(formatted)
+
+                  const digits = formatted.replace(/\D/g, '')
+                  const realValue = Number(digits) / 100
+
+                  field.onChange(realValue)
+                }}
               />
             </FormControl>
             <FormMessage />
