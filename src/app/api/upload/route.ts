@@ -1,12 +1,7 @@
 import { cloudinary } from "@/lib/cloudinary.config" // your config path
 import { NextRequest, NextResponse } from "next/server"
-import { receiptPrompt } from "@/lib/constants"
-import { genAi, genAiModel } from "@/lib/google-ai-config"
 import { prisma } from "@/lib/prisma"
 import { currentUser } from "@clerk/nextjs/server"
-import { createPartFromBase64, createUserContent } from "@google/genai"
-import axios from "axios"
-import { redirect } from "next/navigation"
 
 export async function POST(req: NextRequest) {
   const user = await currentUser()

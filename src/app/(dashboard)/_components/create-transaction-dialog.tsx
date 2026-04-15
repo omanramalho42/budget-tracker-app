@@ -57,13 +57,12 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import CategoryPicker from './category-picker'
-import FileUploader from './file-uploader'
-
-import { DateToUTCDate } from '@/lib/helpers'
 
 import { CalendarIcon, Loader, Loader2 } from 'lucide-react'
 import MoneyInput from '@/components/money-input'
-import { uploadReceipt } from '../transactions/_actions/upload-file'
+import { uploadAndScanReceipt } from '../transactions/_actions/upload-file'
+import { createAIScanner } from '../_actions/create-ai-scanner'
+import { Card } from '@/components/ui/card'
 
 interface CreateTransactionsDialogProps {
   trigger: React.ReactNode
@@ -139,6 +138,7 @@ function CreateTransactionDialog({
         description: '',
         type,
         installments: 1,
+        receiptUrl: "",
         isRecurring: false,
         paymentMethod: undefined
       })
@@ -166,11 +166,7 @@ function CreateTransactionDialog({
         id: 'create-transaction',
       })
       console.log(values, "values")
-      const { receiptFiles, ...safeValues } = values
-      console.log(safeValues, "safe values")
-      mutate({
-        ...safeValues,
-      })
+      mutate(values)
     },
     [mutate],
   )
@@ -213,7 +209,7 @@ function CreateTransactionDialog({
                   <DialogTitle>Escanear recibo</DialogTitle>
                 </DialogHeader>
 
-                <FormField
+                {/* <FormField
                   control={form.control}
                   name="receiptFiles"
                   render={({ field }) => (
@@ -227,38 +223,85 @@ function CreateTransactionDialog({
                       </FormControl>
                     </FormItem>
                   )}
+                /> */}
+
+                {/* IMAGE */}
+                <FormField
+                  control={form.control}
+                  name="receiptUrl"
+                  render={({ field }) => {
+                    const inputRef = useRef<HTMLInputElement | null>(null)
+
+                    return (
+                      <FormItem>
+                        <FormControl>
+                          <div className="cursor-pointer">
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              ref={inputRef}
+                              hidden
+                              onChange={(e) => {
+                                // console.log(e.target.files?.[0],"files")
+                                const file = e.target.files?.[0]
+                                if (!file) return
+
+                                const url = URL.createObjectURL(file)
+                                field.onChange(file)
+                              }}
+                            />
+                            <Card 
+                              className="p-3 flex flex-col items-center justify-center text-xs"
+                              onClick={() => inputRef.current?.click()}
+                            >
+                              📷 Imagem
+                              {field.value !== null && (
+                                <span className="text-green-500 mt-1">Selecionado</span>
+                              )}
+                            </Card>
+                          </div>
+                        </FormControl>
+                      </FormItem>
+                    )
+                  }}
                 />
 
                 <Button
-                  disabled={!form.watch('receiptFiles') || loading}
+                  disabled={!form.watch('receiptUrl') || loading}
                   onClick={async () => {
                     setLoading(true)
                     simulateAIProcessing()
 
                     try {
-                      const file = (form.watch('receiptFiles') as FileList)[0]
+                      const file = form.watch('receiptUrl') as File;
+                      if (!file) return;
 
-                      if (!file) return
+                      // ✅ Crie um FormData e adicione o arquivo
+                      const formData = new FormData();
+                      formData.append('file', file);
 
-                      // 🔥 converte para base64
-                      const base64 = await fileToBase64(file)
+                      // Chame a action passando o formData
+                      const result = await uploadAndScanReceipt(formData); 
 
-                      // 🔥 chama server action
-                      const uploadRes = await uploadReceipt(base64)
+                      form.setValue('receiptUrl', result.url)
+                      form.setValue('description', result.description)
+                      form.setValue('amount', result.amount)
 
-                      // salva no form
-                      form.setValue('receiptUrl', uploadRes.url)
+                      if (result.date) {
+                        const [year, month, day] = result.date.split('-').map(Number)
 
-                      // 🔥 continua com IA
-                      const formData = new FormData()
-                      formData.append('file', file)
+                        form.setValue(
+                          'date',
+                          new Date(year, month - 1, day),
+                          {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          }
+                        )
+                      }
 
-                      const { data } = await axios.post('/api/scan-receipt', formData)
+                      const [year, month, day] = result?.date.split('-').map(Number)
 
-                      form.setValue('description', data.description || '')
-                      form.setValue('amount', Number(data.amount) || 0)
-
-                      const [year, month, day] = data.date.split('-').map(Number)
                       const parsedDate = new Date(year, month - 1, day)
 
                       form.setValue('date', parsedDate, {
@@ -283,6 +326,7 @@ function CreateTransactionDialog({
                 >
                   {loading ? <Loader className="animate-spin" /> : 'Escanear'}
                 </Button>
+
                 {loading && (
                   <div className="mt-4 p-4 rounded-xl border bg-muted/50 flex flex-col items-center gap-3 animate-in fade-in">
                     

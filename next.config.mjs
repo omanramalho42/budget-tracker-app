@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-   experimental: {
+  experimental: {
     serverActions: {
       bodySizeLimit: '20mb',
     },
@@ -15,7 +15,10 @@ const nextConfig = {
     ignoreDuringBuilds: true,
 }, typescript: {
     ignoreBuildErrors: true
-  }
+  },
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;

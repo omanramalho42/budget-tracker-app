@@ -14,6 +14,7 @@ import {
 
 import { calculateNextOcurrence } from '@/lib/helpers'
 import { PAYMENTMETHOD } from '@prisma/client'
+import { cloudinary } from '@/lib/cloudinary.config'
 
 const mapPaymentMethod = (method?: string | null): PAYMENTMETHOD | null => {
   if (!method) return null
@@ -25,6 +26,39 @@ const mapPaymentMethod = (method?: string | null): PAYMENTMETHOD | null => {
   }
 
   return map[method] || null
+}
+
+export async function uploadToCloudinary(file: File) {
+  const arrayBuffer = await file.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+
+  try {
+    return new Promise<{
+      url: string
+      resourceType: string
+    }>((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder: "tasks",
+          resource_type: "auto", // 👈 detecta imagem / vídeo / pdf
+        },
+        (error, result) => {
+          if (error || !result) {
+            return reject(error)
+          }
+  
+          resolve({
+            url: result.secure_url,
+            resourceType: result.resource_type,
+          })
+        }
+      ).end(buffer)
+    })
+  } catch (error) {
+    if(error instanceof Error) {
+      throw new Error(error.message)
+    }
+  }
 }
 
 export async function CreateTransaction(form: CreateTransactionSchemaType) {
@@ -92,7 +126,6 @@ export async function CreateTransaction(form: CreateTransactionSchemaType) {
   } = parsedBody.data
 
   log('📦 RAW DATA', parsedBody.data)
-
   // =============================
   // 📂 CATEGORY
   // =============================
