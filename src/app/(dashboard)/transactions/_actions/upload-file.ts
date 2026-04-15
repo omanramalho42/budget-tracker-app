@@ -5,7 +5,6 @@ import { cloudinary } from "@/lib/cloudinary.config"
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import z from "zod"
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
