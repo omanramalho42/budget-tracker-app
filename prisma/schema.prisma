@@ -51,6 +51,10 @@ model User {
 
   clerkUserId String @unique
 
+  habitsUserId      String?   @unique @map("habits_user_id")
+  habitsClerkUserId String?   @unique @map("habits_clerk_user_id")
+  habitsLinkedAt    DateTime? @map("habits_linked_at")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -112,8 +116,15 @@ model Transaction {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  sourceApp      String? // "habits" | null (transação criada no próprio budget-tracker)
+  sourceRefId    String? // id do hábito, quando sourceApp = "habits"
+  sourceRefLabel String? // nome do hábito, cache pra exibição
+
+
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([sourceApp, sourceRefId])
 }
 
 model MonthHistory {
