@@ -1,0 +1,58 @@
+import { prisma } from "@/lib/prisma"
+
+const INTERNAL_SECRET = process.env.INTEGRATION_LINK_SECRET!
+
+export async function requireInternalAuth(request: Request) {
+  const secret = request.headers.get("x-internal-secret")
+
+  if (!secret || secret !== INTERNAL_SECRET) {
+    return {
+      ok: false as const,
+      response: new Response("Unauthorized", {
+        status: 401,
+      }),
+    }
+  }
+
+  const budgetTrackerUserId =
+    request.headers.get("x-budget-tracker-user-id")
+
+  if (!budgetTrackerUserId) {
+    return {
+      ok: false as const,
+      response: Response.json(
+        {
+          error: "x-budget-tracker-user-id ausente",
+        },
+        {
+          status: 400,
+        }
+      ),
+    }
+  }
+
+  const userDb = await prisma.user.findUnique({
+    where: {
+      id: budgetTrackerUserId,
+    },
+  })
+
+  if (!userDb) {
+    return {
+      ok: false as const,
+      response: Response.json(
+        {
+          error: "Usuário não encontrado",
+        },
+        {
+          status: 404,
+        }
+      ),
+    }
+  }
+
+  return {
+    ok: true as const,
+    userDb,
+  }
+}

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,135 +6,181 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  USER
-  ADMIN
-  STARTER
-  PREMIUM
-}
-
-// Novo Schema para controlar limites de IA e acessos
 model UserUsage {
   id                String   @id @default(uuid())
   userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   aiGenerationsUsed Int      @default(0)
-  aiLimit           Int      @default(5) // Limite default para USER
-  
-  // Outros limites que você pode querer controlar
+  aiLimit           Int      @default(5)
   maxHabits         Int      @default(10)
   canUseVoice       Boolean  @default(false)
-
   lastReset         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model User {
-  id    String @id @default(uuid())
-  email String
+  id                   String         @id @default(uuid())
+  email                String
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  clerkUserId          String         @unique
+  firstName            String?
+  imageUrl             String?
+  lastName             String?
+  role                 Role           @default(USER)
+  habits_clerk_user_id String?        @unique
+  habits_linked_at     DateTime?
+  habits_user_id       String?        @unique
+  categories           Category[]
+  monthHistory         MonthHistory[]
+  transactions         Transaction[]
+  settings             UserSettings?
+  usage                UserUsage?
+  yearHistory          YearHistory[]
+  oauthAuthorizationCodes OAuthAuthorizationCode[]
+  oauthAccessTokens       OAuthAccessToken[]
+  accountLinkConfirmations AccountLinkConfirmation[]
+}
 
-  // 2. Atualize o campo role para usar o Enum
-  role         Role     @default(USER)
-  // Relacionamento com o esquema de limites
-  usage        UserUsage?
+model OAuthClient {
+  id           String   @id @default(uuid())
+  clientId     String   @unique
+  clientSecret String
+  name         String
+  redirectUris String[]
+  createdAt    DateTime @default(now())
 
-  firstName String?
-  lastName  String?
-  imageUrl  String?
+  authorizationCodes OAuthAuthorizationCode[]
+  accessTokens      OAuthAccessToken[]
+}
 
-  clerkUserId String @unique
+model OAuthAuthorizationCode {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  clientId      String
+  client        OAuthClient @relation(fields: [clientId], references: [id])
+  userId        String
+  user          User @relation(fields: [userId], references: [id])
+  redirectUri   String
+  scopes        String[]
+  codeChallenge String
+  expiresAt     DateTime
+  usedAt        DateTime?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@index([expiresAt])
+}
 
-  categories   Category[]
-  transactions Transaction[]
-  settings     UserSettings?
+model OAuthAccessToken {
+  id              String   @id @default(uuid())
+  accessToken     String   @unique
+  refreshToken    String   @unique
+  clientId        String
+  client          OAuthClient @relation(fields: [clientId], references: [id])
+  userId          String
+  user            User @relation(fields: [userId], references: [id])
+  scopes          String[]
+  accessExpiresAt DateTime
+  refreshExpiresAt DateTime
+  revokedAt       DateTime?
+  createdAt       DateTime @default(now())
 
-  monthHistory MonthHistory[]
-  yearHistory  YearHistory[]
+  @@index([userId])
+}
+
+model AccountLinkConfirmation {
+  id              String   @id @default(uuid())
+  token           String   @unique
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  requestingApp   String
+  requestClientId String
+  scopes          String[]
+  redirectUri     String
+  state           String
+  status          String   @default("pending")
+  expiresAt       DateTime
+  respondedAt     DateTime?
+  createdAt       DateTime @default(now())
+
+  @@index([token])
+  @@index([userId, status])
 }
 
 model UserSettings {
-  currency String
-  userId   String @id
-
+  currency  String
+  userId    String   @id
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Category {
-  id String @id @default(uuid())
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  name String
-  type String @default("income")
-  icon String
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  createdAt    DateTime      @default(now())
+  name         String
+  type         String        @default("income")
+  icon         String
+  userId       String
+  id           String        @id @default(uuid())
+  updatedAt    DateTime      @updatedAt
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
 
   @@unique([name, userId, type])
 }
 
 model Transaction {
-  id String @id @default(uuid())
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  amount      Float
-  description String
-  date        DateTime
-  type        String   @default("income")
-
-  categoryIcon String
-
-  receiptUrl         String?
+  id                 String              @id @default(uuid())
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  amount             Float
+  description        String
+  date               DateTime
+  userId             String
+  type               String              @default("income")
+  categoryIcon       String
+  categoryId         String
   isRecurring        Boolean             @default(false)
+  paymentMethod      PAYMENTMETHOD?
+  receiptUrl         String?
   recurrenceInterval RECURRENCEINTERVAL?
   nextRecurringDate  DateTime?
-  paymentMethod      PAYMENTMETHOD?
+  sourceApp          String?
+  sourceRefId        String?
+  sourceRefLabel     String?
+  category           Category            @relation(fields: [categoryId], references: [id])
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  @@index([sourceApp, sourceRefId])
 }
 
 model MonthHistory {
-  day   Int
-  month Int
-  year  Int
-
+  day     Int
+  month   Int
+  year    Int
   income  Float
   expanse Float
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([day, month, year, userId])
 }
 
 model YearHistory {
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  month Int
-  year  Int
-
+  userId  String
+  month   Int
+  year    Int
   income  Float
   expanse Float
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([month, year, userId])
+}
+
+enum Role {
+  USER
+  ADMIN
+  STARTER
+  PREMIUM
 }
 
 enum TYPES {
